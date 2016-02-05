@@ -22,8 +22,8 @@ int mem_write_section(HeapData*, int, HeapData*);
 // is stack allocated within the scope of the calling function
 uint8_t mem_read(HeapData, int, int*);
 
-int mem_dump(HeapData*, char*);
-int mem_dump_section(HeapData*, char*, int, int); 
+int mem_dump(HeapData, char*);
+int mem_dump_section(HeapData, char*, int, int); 
 int mem_write_binary(void*, int, char*);
 
 int mem_check_access(HeapData*, int );

@@ -95,17 +95,17 @@ int mem_write_binary(void* stream, int length, char* path) {
 
 }
 
-int mem_dump(HeapData* heap, char* path){
-	if (!heap->valid) return ERR_INVALID_MEMORY_ACCESS;
-	return mem_write_binary(heap->data, heap->size, path);
+int mem_dump(HeapData heap, char* path){
+	if (!heap.valid) return ERR_INVALID_MEMORY_ACCESS;
+	return mem_write_binary(heap.data, heap.size, path);
 }	
 
-int mem_dump_section(HeapData* heap, char* path, int start_location, int length) {
-	int ret = mem_check_access(heap, start_location);
+int mem_dump_section(HeapData heap, char* path, int start_location, int length) {
+	int ret = mem_check_access(&heap, start_location);
 	if (ret != SUCCESS) return ret;
-	if (start_location + length > heap->size) return ERR_INVALID_MEMORY_ACCESS;
+	if (start_location + length > heap.size) return ERR_INVALID_MEMORY_ACCESS;
 
-	return mem_write_binary(&heap->data[start_location], length, path);
+	return mem_write_binary(&heap.data[start_location], length, path);
 }
 
 

@@ -50,7 +50,6 @@ static char* test_directory_get_inode_number() {
 	fs_add_directory_entry(&directory, entry4);
 	fs_add_directory_entry(&directory, entry5);
 	fs_add_directory_entry(&directory, entry6);
-	mem_dump(&directory, "dump.bin");
 
 	uint32_t inode_number = 0;
 	fs_directory_get_inode_number(directory, entry1.name, &inode_number);
