@@ -27,8 +27,8 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	superblock->inode_bitmap_size = round_up_nearest_multiple(superblock->num_inodes / 8, superblock->block_size);
 
 	superblock->inode_table_size = round_up_nearest_multiple(superblock->num_inodes * superblock->inode_size, superblock->block_size);
-  	superblock->inode_start_addr = 1 + (superblock->inode_bitmap_size / superblock->block_size);
-  	superblock->data_block_bitmap_addr = superblock->inode_start_addr + (superblock->inode_table_size / superblock->block_size);
+  	superblock->inode_table_start_addr = 1 + (superblock->inode_bitmap_size / superblock->block_size);
+  	superblock->data_block_bitmap_addr = superblock->inode_table_start_addr + (superblock->inode_table_size / superblock->block_size);
 
   	// blocks_remaining is all of the blocks which have not been reserved up to this point
   	int blocks_remaining = superblock->num_blocks - superblock->data_block_bitmap_addr;
@@ -76,7 +76,7 @@ int fs_read_bitmap_bit(Bitmap* bitmap, int bit_address, int* error)
 }
 
 int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
-	const int entry_size = entry.filename_length + 5;
+	const int entry_size = entry.name_length + 5;
 	int ret = 0;
 
 	if (!directory->valid) {
@@ -96,11 +96,11 @@ int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
 	if (ret != SUCCESS) return ret;
 	current_location += INCREMENT_32;
 
-	ret = mem_write(directory, current_location, entry.filename_length);
+	ret = mem_write(directory, current_location, entry.name_length);
 	if (ret != SUCCESS) return ret;
 	current_location += INCREMENT_8;
 
-	ret = mem_write_section(directory, current_location, &entry.filename);
+	ret = mem_write_section(directory, current_location, &entry.name);
 	if (ret != SUCCESS) return ret;
 
 	return SUCCESS;

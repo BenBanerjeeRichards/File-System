@@ -15,6 +15,11 @@
 					All blocks minus superblock, bitmaps and inode table
 */
 
+typedef HeapData Directory;
+typedef HeapData Bitmap; 
+typedef HeapData InodeName;
+
+
 typedef struct {
 	HeapData data;
 
@@ -80,16 +85,12 @@ typedef struct {
 
 typedef struct {
 	uint32_t inode_number;
-	uint8_t filename_length;
+	uint8_t name_length;
 
 	// char* is not used - the filesystem doesn't care about the encoding.
 	// filename does not need to be null terminated
-	HeapData filename;
+	InodeName name;
 } DirectoryEntry;
-
-// The directory is pointed to by the directory's inode
-typedef HeapData Directory;
-typedef HeapData Bitmap; 
 
 int fs_create_superblock(Superblock*, uint64_t);
 int fs_write_block(HeapData*, HeapData, int);

@@ -22,14 +22,14 @@ static char* test_directory_add_entry() {
 	Directory directory = {0};
 
 	// TODO put this into util file
-	HeapData filename = {0};
+	InodeName filename = {0};
 	char* fname = "Hello World!";
 	util_string_to_heap(fname, &filename);
 
 	DirectoryEntry entry = {0};
 	
-	entry.filename = filename;
-	entry.filename_length = strlen(fname);
+	entry.name = filename;
+	entry.name_length = strlen(fname);
 	entry.inode_number = 21098740;
 
 	fs_add_directory_entry(&directory, entry);
@@ -42,8 +42,8 @@ static char* test_directory_add_entry() {
 	ret = util_string_to_heap(fname2, &filename2);
 
 	DirectoryEntry entry2 = {0};
-	entry2.filename = filename2;
-	entry2.filename_length = strlen(fname2);
+	entry2.name = filename2;
+	entry2.name_length = strlen(fname2);
 	entry2.inode_number = 0x83f7bc82;
 
 	ret = fs_add_directory_entry(&directory, entry2);
@@ -54,7 +54,7 @@ static char* test_directory_add_entry() {
 	mem_dump(&directory, "dump.bin");
 	
 	mem_free(&directory);
-	mem_free(&entry.filename);
+	mem_free(&entry.name);
 	return 0;
 }
 
