@@ -239,7 +239,7 @@ static char* test_bitmap_io() {
 
 	for (int i = 0; i < 16; i++)
 	{
-		int v = fs_read_bitmap_bit(&block, i, &ret);
+		int v = fs_read_bitmap_bit(block, i, &ret);
 		
 		if (i < 8)
 		{

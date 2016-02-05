@@ -64,13 +64,13 @@ int fs_write_bitmap_bit(Bitmap* bitmap, int bit_address, int value){
 	return mem_write(bitmap, byte_addr, byte_val);
 }
 
-int fs_read_bitmap_bit(Bitmap* bitmap, int bit_address, int* error)
+int fs_read_bitmap_bit(Bitmap bitmap, int bit_address, int* error) 
 {
 	int byte_addr = bit_address / 8;
 	int bit = bit_address - (byte_addr * 8);
 	int ret = 0;
 
-	uint8_t byte = mem_read(*bitmap, byte_addr, &ret);
+	uint8_t byte = mem_read(bitmap, byte_addr, &ret);
 	if (ret != SUCCESS) return ret;
 
 	return (byte >> (7-bit)) & 1;
