@@ -228,9 +228,9 @@ static char* test_bitmap_io() {
 	ret += fs_write_bitmap_bit(&block, 13, 1);
 	mu_assert("[MinUnit][FAIL] bitmap io: bitmap writing failed (mem error)", ret == SUCCESS);
 
-	uint8_t byte1 = mem_read(&block, 0, &ret);
+	uint8_t byte1 = mem_read(block, 0, &ret);
 	mu_assert("[MinUnit][FAIL] bitmap io: failed to read byte 1 (mem error)", ret == SUCCESS);
-	uint8_t byte2 = mem_read(&block, 1, &ret);
+	uint8_t byte2 = mem_read(block, 1, &ret);
 	mu_assert("[MinUnit][FAIL] bitmap io: failed to read byte 1 (mem error)", ret == SUCCESS);
 	mu_assert("[MinUnit][FAIL] bitmap io: bitmap data incorrect (byte 1)", byte1 == 0x96);
 	mu_assert("[MinUnit][FAIL] bitmap io: bitmap data incorrect (byte 2)", byte2 == 0xDC);

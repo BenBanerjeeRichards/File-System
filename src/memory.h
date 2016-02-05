@@ -20,7 +20,7 @@ int mem_write_section(HeapData*, int, HeapData*);
 // This function is an exception - the error checking is 
 // passed as an argument. This is so that the returned value
 // is stack allocated within the scope of the calling function
-uint8_t mem_read(HeapData*, int, int*);
+uint8_t mem_read(HeapData, int, int*);
 
 int mem_dump(HeapData*, char*);
 int mem_dump_section(HeapData*, char*, int, int); 

@@ -52,7 +52,7 @@ int fs_write_bitmap_bit(Bitmap* bitmap, int bit_address, int value){
 	int bit = bit_address - (byte_addr * 8);
 	int ret = 0;
 
-	uint8_t byte_val = mem_read(bitmap, byte_addr, &ret);
+	uint8_t byte_val = mem_read(*bitmap, byte_addr, &ret);
 	if (ret != SUCCESS) return ret;
 
 	if (value) {
@@ -70,7 +70,7 @@ int fs_read_bitmap_bit(Bitmap* bitmap, int bit_address, int* error)
 	int bit = bit_address - (byte_addr * 8);
 	int ret = 0;
 
-	uint8_t byte = mem_read(bitmap, byte_addr, &ret);
+	uint8_t byte = mem_read(*bitmap, byte_addr, &ret);
 	if (ret != SUCCESS) return ret;
 
 	return (byte >> (7-bit)) & 1;
@@ -123,7 +123,7 @@ int fs_directory_get_inode_number(Directory directory, HeapData name, uint32_t* 
 		uint32_t inode_num = util_read_uint32(directory, current_location, &error);
 		if (error != SUCCESS) return error;
 
-		uint8_t name_size = mem_read(&directory, current_location + 4, &error);
+		uint8_t name_size = mem_read(directory, current_location + 4, &error);
 		if (error != SUCCESS) return error;
 
 		if (name_size != name.size) {

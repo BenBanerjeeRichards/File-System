@@ -110,13 +110,13 @@ int util_write_uint64(HeapData* data, int location, uint64_t value){
 uint16_t util_read_uint16(HeapData data, int location, int* function_status){
 	int status = 0;
 
-	uint8_t msb = mem_read(&data, location, &status);
+	uint8_t msb = mem_read(data, location, &status);
 	if (status != SUCCESS){
 		*function_status = status;
 		return 0;
 	}
 
-	uint8_t lsb = mem_read(&data, location + 1, &status);
+	uint8_t lsb = mem_read(data, location + 1, &status);
 	if (status != SUCCESS){
 		*function_status = status;
 		return 0;

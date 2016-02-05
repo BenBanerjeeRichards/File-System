@@ -71,14 +71,14 @@ int mem_write_section(HeapData* heap, int location, HeapData* data) {
 	return SUCCESS;
 }
 
-uint8_t mem_read(HeapData* heap, int location, int* function_status){
-	int ret = mem_check_access(heap, location);
+uint8_t mem_read(HeapData heap, int location, int* function_status){
+	int ret = mem_check_access(&heap, location);
 	if (ret != SUCCESS){
 		*function_status = ret;
 		return 0;
 	}
 
-	return heap->data[location];
+	return heap.data[location];
 }
 
 int mem_write_binary(void* stream, int length, char* path) {
