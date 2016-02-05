@@ -1,0 +1,15 @@
+C_FILES := $(shell find src -name '*.c')
+OBJ_FILES := $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
+LD_FLAGS := -g -lpthread -lm -Wno-unused-value -Wall -Wextra -pedantic -D DEBUG
+CC_FLAGS := -g -Wno-unused-value -Werror -D DEBUG
+#COMPILER = gcc -std=c99 -pg
+COMPILER = clang-3.5
+
+main: $(OBJ_FILES)
+	$(COMPILER) $(LD_FLAGS) -o $@ $^
+
+obj/%.o: src/%.c
+	$(COMPILER) $(CC_FLAGS) -c -o $@ $<
+
+obj/%.o: src/test/%.c
+	$(COMPILER) $(CC_FLAGS) -c -o $@ $<	
