@@ -13,7 +13,7 @@ typedef struct {
 
 int mem_alloc(HeapData*, int);
 int mem_realloc(HeapData*, int);
-int mem_free(HeapData*);
+int mem_free(HeapData);
 int mem_write(HeapData*, int, uint8_t);
 int mem_write_section(HeapData*, int, HeapData*);
 

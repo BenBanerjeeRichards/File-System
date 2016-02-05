@@ -69,52 +69,51 @@ static char* test_directory_get_inode_number() {
 	mu_assert("[MinUnit][FAIL] directory get inode: expected inode not found error", ret == ERR_INODE_NOT_FOUND);
 
 
-	mem_free(&entry1.name);
-	mem_free(&entry2.name);
-	mem_free(&entry3.name);
-	mem_free(&entry4.name);
-	mem_free(&entry5.name);
-	mem_free(&entry6.name);
-	mem_free(&directory);
-	mem_free(&invalid);
+	mem_free(entry1.name);
+	mem_free(entry2.name);
+	mem_free(entry3.name);
+	mem_free(entry4.name);
+	mem_free(entry5.name);
+	mem_free(entry6.name);
+	mem_free(directory);
+	mem_free(invalid);
 	return 0;
 }
 
 static char* test_directory_add_entry() {
 	Directory directory = {0};
-
 	HeapData filename = {0};
-	char* fname = "Hello World!";
-	util_string_to_heap(fname, &filename);
-
+	HeapData filename2 = {0};
 	DirectoryEntry entry = {0};
-	
+	DirectoryEntry entry2 = {0};
+
+	uint8_t expected[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21};
+	uint8_t expected2[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21, 0x83, 0xf7,0xbc, 0x82, 0x06, 0x6d ,0x61 ,0x69 ,0x6e ,0x2e ,0x63};
+
+	int ret = 0;
+
+	ret = util_string_to_heap("Hello World!", &filename);
+	ret = util_string_to_heap("main.c", &filename2);
+
 	entry.name = filename;
 	entry.inode_number = 21098740;
 
+	entry2.inode_number = 0x83f7bc82;
+	entry2.name = filename2;
+
 	fs_add_directory_entry(&directory, entry);
-	uint8_t expected[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21};
-	int ret = memcmp(expected, directory.data, 17);
+	ret = memcmp(expected, directory.data, 17);
 	mu_assert("[MinUnit][ERROR] directory add file: binary data produced incorrect [1]", ret == 0);
 
-	HeapData filename2 = {0};
-	char* fname2 = "main.c";
-	ret = util_string_to_heap(fname2, &filename2);
-
-	DirectoryEntry entry2 = {0};
-	entry2.name = filename2;
-	entry2.inode_number = 0x83f7bc82;
 
 	ret = fs_add_directory_entry(&directory, entry2);
-	uint8_t expected2[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21, 0x83, 0xf7,0xbc, 0x82, 0x06, 0x6d ,0x61 ,0x69 ,0x6e ,0x2e ,0x63};
 	ret = memcmp(expected2, directory.data, sizeof(expected2));
 
 	mu_assert("[MinUnit][ERROR] directory add file: binary data produced incorrect [2]", ret == 0);
 	
-	mem_free(&directory);
-	mem_free(&entry.name);
-	mem_free(&entry.name);
-	mem_free(&filename2);
+	mem_free(directory);
+	mem_free(entry.name);
+	mem_free(entry2.name);
 
 	return 0;
 }
@@ -157,7 +156,7 @@ static char* test_inode_serialization() {
 	int ret = compare_inode(inode, inode2);
 
 	mu_assert("[MinUnit][FAIL] inode serialization: inode changed by serialization", ret == 0);
-	mem_free(&data);
+	mem_free(data);
 	return 0;
 
 }
@@ -178,7 +177,7 @@ static char* test_superblock_serialization() {
 	serialize_superblock(&data, superblock);
 	unserialize_superblock(&data, &superblock2);
 
-	mem_free(&data);
+	mem_free(data);
 	int ret = compare_superblock(superblock, superblock2);
 	mu_assert("[MinUnit][FAIL] superblock serialization: superblock changed by serialization", ret == 0);
 	return 0;
@@ -254,7 +253,7 @@ static char* test_bitmap_io() {
 	mu_assert("[MinUnit][FAIL] bitmap io: bitmap data incorrect [read] (byte 1)", byte1 == 0x96);
 	mu_assert("[MinUnit][FAIL] bitmap io: bitmap data incorrect [read] (byte 2)", byte2 == 0xDC);
 
-	mem_free(&block);
+	mem_free(block);
 
 	return 0;
 

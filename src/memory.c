@@ -45,10 +45,10 @@ int mem_realloc(HeapData* heap, int size) {
 	return SUCCESS;
 }
 
-int mem_free(HeapData* heap){
-	if (!heap->valid) return ERR_INVALID_MEMORY_ACCESS;
-	heap->valid = 0;
-	free(heap->data);
+int mem_free(HeapData heap){
+	if (!heap.valid) return ERR_INVALID_MEMORY_ACCESS;
+	heap.valid = 0;
+	free(heap.data);
 	return SUCCESS;
 }
 
