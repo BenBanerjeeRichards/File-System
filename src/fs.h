@@ -85,11 +85,10 @@ typedef struct {
 
 typedef struct {
 	uint32_t inode_number;
-	uint8_t name_length;
 
 	// char* is not used - the filesystem doesn't care about the encoding.
 	// filename does not need to be null terminated
-	InodeName name;
+	HeapData name;
 } DirectoryEntry;
 
 int fs_create_superblock(Superblock*, uint64_t);
@@ -97,5 +96,6 @@ int fs_write_block(HeapData*, HeapData, int);
 int fs_write_bitmap_bit(Bitmap*, int, int);
 int fs_read_bitmap_bit(Bitmap*, int, int*);
 int fs_add_directory_entry(Directory*, DirectoryEntry);
+int fs_directory_get_inode_number(Directory, HeapData, uint32_t*);
 
 #endif

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "disk.h"
 #include "constants.h"
 #include "memory.h"
@@ -76,7 +77,8 @@ int fs_read_bitmap_bit(Bitmap* bitmap, int bit_address, int* error)
 }
 
 int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
-	const int entry_size = entry.name_length + 5;
+	if (entry.name.size > 0xFF) return ERR_INODE_NAME_TOO_LARGE;
+	const int entry_size = entry.name.size + 5;
 	int ret = 0;
 
 	if (!directory->valid) {
@@ -96,7 +98,7 @@ int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
 	if (ret != SUCCESS) return ret;
 	current_location += INCREMENT_32;
 
-	ret = mem_write(directory, current_location, entry.name_length);
+	ret = mem_write(directory, current_location, entry.name.size);
 	if (ret != SUCCESS) return ret;
 	current_location += INCREMENT_8;
 
@@ -104,4 +106,38 @@ int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
 	if (ret != SUCCESS) return ret;
 
 	return SUCCESS;
+}
+
+int fs_directory_get_inode_number(Directory directory, HeapData name, uint32_t* inode_number) {
+	if(!directory.valid) return ERR_INVALID_MEMORY_ACCESS;
+	if (!name.valid) return ERR_INVALID_MEMORY_ACCESS;
+
+	// Always referes to the *start* of each directory entry
+	int current_location = 0;
+
+	while (current_location < directory.size) {
+		int name_start = current_location + 5;
+		int error = 0;
+		if (name_start + name.size > directory.size) return ERR_INODE_NOT_FOUND;
+
+		uint32_t inode_num = util_read_uint32(directory, current_location, &error);
+		if (error != SUCCESS) return error;
+
+		uint8_t name_size = mem_read(&directory, current_location + 4, &error);
+		if (error != SUCCESS) return error;
+
+		if (name_size != name.size) {
+			current_location += 5 + name_size;
+			continue;
+		}
+
+		if (memcmp(&directory.data[current_location + 5], name.data, name.size) == 0) {
+			*inode_number = inode_num;
+			return SUCCESS;
+		}
+
+		current_location += 5 + name_size;
+	}
+
+	return ERR_INODE_NOT_FOUND;
 }
