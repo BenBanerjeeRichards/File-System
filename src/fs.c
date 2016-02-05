@@ -26,9 +26,9 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	// Fit the bitmaps into full blocks
 	superblock->inode_bitmap_size = round_up_nearest_multiple(superblock->num_inodes / 8, superblock->block_size);
 
-	superblock->Inodeable_size = round_up_nearest_multiple(superblock->num_inodes * superblock->inode_size, superblock->block_size);
-  	superblock->Inodeable_start_addr = 1 + (superblock->inode_bitmap_size / superblock->block_size);
-  	superblock->data_block_bitmap_addr = superblock->Inodeable_start_addr + (superblock->Inodeable_size / superblock->block_size);
+	superblock->inode_table_size = round_up_nearest_multiple(superblock->num_inodes * superblock->inode_size, superblock->block_size);
+  	superblock->inode_start_addr = 1 + (superblock->inode_bitmap_size / superblock->block_size);
+  	superblock->data_block_bitmap_addr = superblock->inode_start_addr + (superblock->inode_table_size / superblock->block_size);
 
   	// blocks_remaining is all of the blocks which have not been reserved up to this point
   	int blocks_remaining = superblock->num_blocks - superblock->data_block_bitmap_addr;

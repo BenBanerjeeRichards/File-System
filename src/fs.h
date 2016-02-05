@@ -51,10 +51,10 @@ typedef struct {
 	uint32_t magic_2;
 
 	uint32_t inode_bitmap_size;
-	uint32_t Inodeable_size;
+	uint32_t inode_table_size;
 	uint32_t data_block_bitmap_size;
 
-	uint32_t Inodeable_start_addr;
+	uint32_t inode_start_addr;
 	uint32_t data_block_bitmap_addr;
 	uint32_t data_blocks_start_addr;
 
