@@ -54,7 +54,7 @@ typedef struct {
 	uint32_t inode_table_size;
 	uint32_t data_block_bitmap_size;
 
-	uint32_t inode_start_addr;
+	uint32_t inode_table_start_addr;
 	uint32_t data_block_bitmap_addr;
 	uint32_t data_blocks_start_addr;
 
@@ -95,6 +95,6 @@ int fs_create_superblock(Superblock*, uint64_t);
 int fs_write_block(HeapData*, HeapData, int);
 int fs_write_bitmap_bit(Bitmap*, int, int);
 int fs_read_bitmap_bit(Bitmap*, int, int*);
-int fs_add_directory_file(Directory*, DirectoryEntry);
+int fs_add_directory_entry(Directory*, DirectoryEntry);
 
 #endif

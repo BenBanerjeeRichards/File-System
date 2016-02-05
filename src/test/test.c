@@ -18,7 +18,7 @@
 
 int tests_run = 0;
 
-static char* test_directory_add_file() {
+static char* test_directory_add_entry() {
 	Directory directory = {0};
 
 	// TODO put this into util file
@@ -32,7 +32,7 @@ static char* test_directory_add_file() {
 	entry.filename_length = strlen(fname);
 	entry.inode_number = 21098740;
 
-	fs_add_directory_file(&directory, entry);
+	fs_add_directory_entry(&directory, entry);
 	uint8_t expected[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21};
 	int ret = memcmp(expected, directory.data, 17);
 	mu_assert("[TEST][ERROR] directory add file: binary data produced incorrect [1]", ret == 0);
@@ -46,7 +46,7 @@ static char* test_directory_add_file() {
 	entry2.filename_length = strlen(fname2);
 	entry2.inode_number = 0x83f7bc82;
 
-	ret = fs_add_directory_file(&directory, entry2);
+	ret = fs_add_directory_entry(&directory, entry2);
 	uint8_t expected2[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21, 0x83, 0xf7,0xbc, 0x82, 0x06, 0x6d ,0x61 ,0x69 ,0x6e ,0x2e ,0x63};
 	ret = memcmp(expected2, directory.data, sizeof(expected2));
 
@@ -136,10 +136,10 @@ static char* test_superblock_calculations() {
 	mu_assert("[TEST][FAIL] superblock calculation: num used inodes incorrect", superblock.num_used_inodes == 0);
 	mu_assert("[TEST][FAIL] superblock calculation: num inodes incorrect", superblock.num_inodes == 512);
 	mu_assert("[TEST][FAIL] superblock calculation: inode bitmap size incorrect", superblock.inode_bitmap_size == 512);
-	mu_assert("[TEST][FAIL] superblock calculation: inode table size incorrect", superblock.Inodeable_size == 64 * 1024);
+	mu_assert("[TEST][FAIL] superblock calculation: inode table size incorrect", superblock.inode_table_size == 64 * 1024);
 	mu_assert("[TEST][FAIL] superblock calculation: num data blocks incorrect", superblock.num_data_blocks == 7167);
 	mu_assert("[TEST][FAIL] superblock calculation: data block bitmap size incorrect", superblock.data_block_bitmap_size == 458240);
-	mu_assert("[TEST][FAIL] superblock calculation: inode table start address incorrect", superblock.Inodeable_start_addr == 2);
+	mu_assert("[TEST][FAIL] superblock calculation: inode table start address incorrect", superblock.inode_table_start_addr == 2);
 	mu_assert("[TEST][FAIL] superblock calculation: data block bitmap addr incorrect", superblock.data_block_bitmap_addr == 130);
 	mu_assert("[TEST][FAIL] superblock calculation: data block start addr incorrect", superblock.data_blocks_start_addr == 1025);
 
@@ -204,7 +204,7 @@ static char* all_tests() {
 	mu_run_test(test_superblock_calculations);
 	mu_run_test(test_bitmap_io);
 	mu_run_test(test_inode_serialization);
-	mu_run_test(test_directory_add_file);
+	mu_run_test(test_directory_add_entry);
 	return 0;
 }
 

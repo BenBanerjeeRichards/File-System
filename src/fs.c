@@ -75,7 +75,7 @@ int fs_read_bitmap_bit(Bitmap* bitmap, int bit_address, int* error)
 	return (byte >> (7-bit)) & 1;
 }
 
-int fs_add_directory_file(Directory* directory, DirectoryEntry entry) {
+int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
 	const int entry_size = entry.filename_length + 5;
 	int ret = 0;
 
