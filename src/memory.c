@@ -5,10 +5,10 @@
 #include "memory.h"
 #include "constants.h"
 
-int mem_check_access(HeapData* heap, int location)
+int mem_check_access(HeapData heap, int location)
 {
-	if (!heap->valid) return ERR_INVALID_MEMORY_ACCESS;
-	if (location < 0 || location > heap->size) return ERR_INVALID_MEMORY_ACCESS;
+	if (!heap.valid) return ERR_INVALID_MEMORY_ACCESS;
+	if (location < 0 || location > heap.size) return ERR_INVALID_MEMORY_ACCESS;
 
 	return SUCCESS;
 }
@@ -54,7 +54,7 @@ int mem_free(HeapData heap){
 
 int mem_write(HeapData* heap, int location, uint8_t data)
 {
-	int ret = mem_check_access(heap, location);
+	int ret = mem_check_access(*heap, location);
 	if (ret != SUCCESS) return ret;
 
 	heap->data[location] = data;
@@ -62,7 +62,7 @@ int mem_write(HeapData* heap, int location, uint8_t data)
 }
 
 int mem_write_section(HeapData* heap, int location, HeapData* data) {
-	int ret = mem_check_access(heap, location);
+	int ret = mem_check_access(*heap, location);
 	if (ret != SUCCESS) return ret;
 	if (!data->valid || data->size <=0) return ERR_INVALID_MEMORY_ACCESS;
 	if (data->size + location > heap->size) return ERR_INVALID_MEMORY_ACCESS;
@@ -72,7 +72,7 @@ int mem_write_section(HeapData* heap, int location, HeapData* data) {
 }
 
 uint8_t mem_read(HeapData heap, int location, int* function_status){
-	int ret = mem_check_access(&heap, location);
+	int ret = mem_check_access(heap, location);
 	if (ret != SUCCESS){
 		*function_status = ret;
 		return 0;
@@ -101,7 +101,7 @@ int mem_dump(HeapData heap, char* path){
 }	
 
 int mem_dump_section(HeapData heap, char* path, int start_location, int length) {
-	int ret = mem_check_access(&heap, start_location);
+	int ret = mem_check_access(heap, start_location);
 	if (ret != SUCCESS) return ret;
 	if (start_location + length > heap.size) return ERR_INVALID_MEMORY_ACCESS;
 

@@ -26,6 +26,6 @@ int mem_dump(HeapData, char*);
 int mem_dump_section(HeapData, char*, int, int); 
 int mem_write_binary(void*, int, char*);
 
-int mem_check_access(HeapData*, int );
+int mem_check_access(HeapData, int );
 void malloc_failed();
 #endif
