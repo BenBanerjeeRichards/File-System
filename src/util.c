@@ -43,9 +43,9 @@ int compare_superblock(Superblock s1, Superblock s2){
 	comparison += (s1.num_inodes == s2.num_inodes);
 	comparison += (s1.num_used_inodes == s2.num_used_inodes);
 	comparison += (s1.inode_bitmap_size == s2.inode_bitmap_size);
-	comparison += (s1.Inodeable_size == s2.Inodeable_size);
+	comparison += (s1.inode_table_size == s2.inode_table_size);
 	comparison += (s1.data_block_bitmap_size == s2.data_block_bitmap_size);
-	comparison += (s1.Inodeable_start_addr == s2.Inodeable_start_addr);
+	comparison += (s1.inode_table_start_addr == s2.inode_table_start_addr);
 	comparison += (s1.data_block_bitmap_addr == s2.data_block_bitmap_addr);
 	comparison += (s1.data_blocks_start_addr == s2.data_blocks_start_addr);
 	comparison += (s1.flags == s2.flags);

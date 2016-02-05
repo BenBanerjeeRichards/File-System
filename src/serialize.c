@@ -59,7 +59,7 @@ int serialize_superblock(HeapData* data, Superblock superblock){
 	location_count += INCREMENT_32;
 	if(ret != SUCCESS) return ret;
 
-	ret = util_write_uint32(data, location_count, superblock.Inodeable_size);
+	ret = util_write_uint32(data, location_count, superblock.inode_table_size);
 	location_count += INCREMENT_32;
 	if(ret != SUCCESS) return ret;
 
@@ -67,7 +67,7 @@ int serialize_superblock(HeapData* data, Superblock superblock){
 	location_count += INCREMENT_32;
 	if(ret != SUCCESS) return ret;
 
-	ret = util_write_uint32(data, location_count, superblock.Inodeable_start_addr);
+	ret = util_write_uint32(data, location_count, superblock.inode_table_start_addr);
 	location_count += INCREMENT_32;
 	if(ret != SUCCESS) return ret;
 
@@ -137,7 +137,7 @@ int unserialize_superblock(HeapData* data, Superblock* superblock){
 	location_count += INCREMENT_32;
 	if (error != SUCCESS) return error;
 
-	superblock->Inodeable_size = util_read_uint32(*data, location_count, &error);
+	superblock->inode_table_size = util_read_uint32(*data, location_count, &error);
 	location_count += INCREMENT_32;
 	if (error != SUCCESS) return error;
 
@@ -145,7 +145,7 @@ int unserialize_superblock(HeapData* data, Superblock* superblock){
 	location_count += INCREMENT_32;
 	if (error != SUCCESS) return error;
 
-	superblock->Inodeable_start_addr = util_read_uint32(*data, location_count, &error);
+	superblock->inode_table_start_addr = util_read_uint32(*data, location_count, &error);
 	location_count += INCREMENT_32;
 	if (error != SUCCESS) return error;
 
