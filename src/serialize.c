@@ -169,6 +169,7 @@ int serialize_inode(HeapData* data, Inode inode) {
 	int error = 0;
 	int location_count = 0;
 	const int INCREMENT_32 = 4;
+	const int INCREMENT_64 = 8;
 
 	error = util_write_uint32(data, location_count, inode.magic);
 	if (error != SUCCESS) return error;
@@ -195,6 +196,14 @@ int serialize_inode(HeapData* data, Inode inode) {
 	location_count += INCREMENT_32;
 
 	error = util_write_uint32(data, location_count, inode.time_last_modified);
+	if (error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+
+	error = util_write_uint64(data, location_count, inode.size);
+	if (error != SUCCESS) return error;
+	location_count += INCREMENT_64;
+	
+	error = util_write_uint32(data, location_count, inode.preallocation_size);
 	if (error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
@@ -228,6 +237,7 @@ int unserialize_inode(HeapData* data, Inode* inode) {
 	int error = 0;
 	int location_count = 0;
 	const int INCREMENT_32 = 4;
+	const int INCREMENT_64 = 8;
 
 	inode->magic = util_read_uint32(*data, location_count, &error);
 	if (error != SUCCESS) return error;
@@ -254,6 +264,14 @@ int unserialize_inode(HeapData* data, Inode* inode) {
 	location_count += INCREMENT_32;
 
 	inode->time_last_modified = util_read_uint32(*data, location_count, &error);
+	if (error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+	
+	inode->size = util_read_uint64(*data, location_count, &error);
+	if (error != SUCCESS) return error;
+	location_count += INCREMENT_64;
+
+	inode->preallocation_size = util_read_uint32(*data, location_count, &error);
 	if (error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 

@@ -7,15 +7,6 @@
 #include "../serialize.h"
 #include "test.h"
 
-/*
-	Inode serialization done. 
-
-	Next: 	
-		- *-Indirect block allocation/management
-		- Inode tables (for filenames)
-		- Allocation policies
-*/
-
 int tests_run = 0;
 
 static char* test_directory_get_inode_number() {
@@ -128,6 +119,8 @@ static char* test_inode_serialization() {
 	inode.flags = 2343;
 	inode.time_created = 21349723;
 	inode.time_last_modified = 65892342;
+	inode.size = 0xAABBCCDDEEFF1122;
+	inode.preallocation_size = 238947;
 	inode.data.direct[0].start_addr = 123480973;
 	inode.data.direct[1].start_addr = 90862343;
 	inode.data.direct[2].start_addr = 20347563;
@@ -264,7 +257,6 @@ static char* all_tests() {
 	mu_run_test(test_bitmap_io);
 	mu_run_test(test_inode_serialization);
 	mu_run_test(test_directory_get_inode_number);
-
 	mu_run_test(test_directory_add_entry);
 	return 0;
 }

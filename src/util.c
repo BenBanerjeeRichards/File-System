@@ -64,6 +64,9 @@ int compare_inode(Inode i1, Inode i2) {
 	comparison +=  (i1.flags == i2.flags);
 	comparison +=  (i1.time_created == i2.time_created);
 	comparison +=  (i1.time_last_modified == i2.time_last_modified);
+	comparison +=  (i1.size == i2.size);
+	comparison +=  (i1.preallocation_size == i2.preallocation_size);
+
 	comparison +=  (i1.data.indirect == i2.data.indirect);
 	comparison +=  (i1.data.double_indirect == i2.data.double_indirect);
 	comparison +=  (i1.data.triple_indirect == i2.data.triple_indirect);
@@ -72,7 +75,7 @@ int compare_inode(Inode i1, Inode i2) {
 		comparison += (i1.data.direct[i].start_addr == i2.data.direct[i].start_addr);
 		comparison += (i1.data.direct[i].length == i2.data.direct[i].length);
 	}
-	return abs(comparison - 10 - 2 * DIRECT_BLOCK_NUM);
+	return abs(comparison - 12 - 2 * DIRECT_BLOCK_NUM);
 
 }
 

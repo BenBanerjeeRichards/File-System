@@ -80,6 +80,17 @@ typedef struct {
 	uint32_t time_created;
 	uint32_t time_last_modified;
 
+	// re preallocation: this is the disk space set aside for the file 
+	// to allow for it to grow within the same continuous run/as close
+	// as possible to the start. This improves disk access times (continuous
+	// IO is very fast but seeking is one of the slowest possible
+	// operations). This does not apply to flash based storage devices. 
+	// In the future it could be interesting to optimise specifically
+	// to flash storage devices (minimising small write operations (< 1 page)).
+
+	uint64_t size;
+	uint32_t preallocation_size;	// in use = file_size - preallocation_size
+
 	DataStream data;
 } Inode;
 
