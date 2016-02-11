@@ -48,10 +48,11 @@ int compare_superblock(Superblock s1, Superblock s2){
 	comparison += (s1.inode_table_start_addr == s2.inode_table_start_addr);
 	comparison += (s1.data_block_bitmap_addr == s2.data_block_bitmap_addr);
 	comparison += (s1.data_blocks_start_addr == s2.data_blocks_start_addr);
+	comparison += (s1.data_bitmap_circular_loc == s2.data_bitmap_circular_loc);
 	comparison += (s1.flags == s2.flags);
 	comparison += (s1.magic_1 == s2.magic_1);
 
-	return abs(comparison - 17);
+	return abs(comparison - 18);
 }
 
 int compare_inode(Inode i1, Inode i2) {
