@@ -6,3 +6,4 @@
 *.html
 main
 doc/
+src/test/test.c~
