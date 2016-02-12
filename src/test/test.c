@@ -9,6 +9,26 @@
 
 int tests_run = 0;
 
+static char* test_find_continuous_bitmap_run() {
+	Bitmap bitmap = {0};
+	mem_alloc(&bitmap, 10);
+	int start_byte = 7;
+	int length = 15;
+	//uint8_t bitmap_data[] = {0xFE, 0x00, 0x0F, 0xFE, 0xCC, 0x00, 0x06, 0xEE, 0x34, 0x8F};
+	uint8_t bitmap_data[] = {0xFE, 0x00, 0xFF, 0xFE, 0xCC, 0x00, 0x06, 0xEE, 0x34, 0x8F};
+	
+	for (int i = 0; i < 10; i++) {
+		mem_write(&bitmap, i, bitmap_data[i]);
+	}
+	
+	int start = 0;
+	fs_find_continuous_bitmap_run(bitmap, length, start_byte, &start);
+	
+	printf("%i\n", start);
+	mu_assert("[MinUnit][TEST] find bitmap run: incorrect start bit", start == 37);
+	return 0;
+}
+
 static char* test_directory_get_inode_number() {
 	// Add some test data
 	Directory directory = {0};
@@ -78,6 +98,7 @@ static char* test_directory_add_entry() {
 	DirectoryEntry entry2 = {0};
 
 	uint8_t expected[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21};
+
 	uint8_t expected2[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21, 0x83, 0xf7,0xbc, 0x82, 0x06, 0x6d ,0x61 ,0x69 ,0x6e ,0x2e ,0x63};
 
 	int ret = 0;
@@ -162,7 +183,8 @@ static char* test_superblock_serialization() {
 	// Manually set some values which would just be zero otherwise
 	superblock.num_used_blocks = 523453;
 	superblock.num_used_inodes = 2323;
-
+	superblock.data_bitmap_circular_loc = 98734223;
+	superblock.flags = 0xAABB;	
 	HeapData data = {0};
 	mem_alloc(&data, 512);
 
@@ -258,6 +280,7 @@ static char* all_tests() {
 	mu_run_test(test_inode_serialization);
 	mu_run_test(test_directory_get_inode_number);
 	mu_run_test(test_directory_add_entry);
+	mu_run_test(test_find_continuous_bitmap_run);
 	return 0;
 }
 
