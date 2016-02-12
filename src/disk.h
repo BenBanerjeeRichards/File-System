@@ -3,10 +3,20 @@
 
 #include <stdint.h>
 #include "memory.h"
+#include "constants.h"
+#include "fs.h"
 
-#define DISK_SIZE MEGA
+typedef struct {
+	// Lock the entire disk when a process is accessing it
+	int is_locked;
 
-typedef HeapData Disk;
+	// Kept in memory for performance
+	Superblock superblock;
+	Bitmap indode_bitmap;
+
+	// Using an in memory disk
+	HeapData data;
+} Disk;
 
 int disk_mount(Disk*);
 int disk_unmount(Disk);
