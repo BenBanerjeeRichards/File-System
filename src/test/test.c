@@ -5,9 +5,58 @@
 #include "../util.h"
 #include "../memory.h"
 #include "../serialize.h"
+#include "../llist.h"
 #include "test.h"
 
 int tests_run = 0;
+
+static char* test_next_dir_name() {
+	char* p = "/dir1/directory2/testing/structure";
+	HeapData path = {0};
+	HeapData name = {0};
+	uint8_t expected1[] = {0x64, 0x69, 0x72, 0x31};
+	uint8_t expected2[] = {0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x32};
+	uint8_t expected3[] = {0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67};
+	uint8_t expected4[] = {0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65};
+
+	util_string_to_heap(p, &path);
+
+	int location = 1;
+	int t = util_path_next_dir_name(path, location, &name);
+	location += name.size + 1;	// Add one to get past forward slash	
+	int ret = memcmp(name.data, expected1, name.size);
+	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [1]", ret == 0);
+	mu_assert("[MinUnit][TEST] next dir name: read blank dir name [1]", name.size != 0);
+	mu_assert("[MinUnit][TEST] next dir name: length of directory incorrect [1]", name.size == 4);
+	mem_free(name);
+
+	util_path_next_dir_name(path, location, &name);
+	location += name.size + 1;	// Add one to get past forward slash	
+	ret = memcmp(name.data, expected2, name.size);
+	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [2]", ret == 0);
+	mu_assert("[MinUnit][TEST] next dir name: read blank dir name [2]", name.size != 0);
+	mu_assert("[MinUnit][TEST] next dir name: length of directory incorrect [1]", name.size == 10);
+	mem_free(name);
+	
+	util_path_next_dir_name(path, location, &name);
+	location += name.size + 1;	// Add one to get past forward slash	
+	ret = memcmp(name.data, expected3, name.size);
+	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [3]", ret == 0);
+	mu_assert("[MinUnit][TEST] next dir name: read blank dir name [3]", name.size != 0);
+	mu_assert("[MinUnit][TEST] next dir name: length of directory incorrect [1]", name.size == 7);
+	mem_free(name);
+
+	util_path_next_dir_name(path, location, &name);
+	location += name.size + 1;	// Add one to get past forward slash	
+	ret = memcmp(name.data, expected4, name.size);
+	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [4]", ret == 0);
+	mu_assert("[MinUnit][TEST] next dir name: read blank dir name [4]", name.size != 0);
+	mu_assert("[MinUnit][TEST] next dir name: length of directory incorrect [1]", name.size == 9);
+
+	mem_free(name);
+	mem_free(path);
+	return 0;
+}
 
 static char* test_find_continuous_bitmap_run() {
 	Bitmap bitmap = {0};
@@ -285,6 +334,7 @@ static char* all_tests() {
 	mu_run_test(test_directory_get_inode_number);
 	mu_run_test(test_directory_add_entry);
 	mu_run_test(test_find_continuous_bitmap_run);
+	mu_run_test(test_next_dir_name);
 	return 0;
 }
 
