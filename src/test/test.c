@@ -5,13 +5,12 @@
 #include "../util.h"
 #include "../memory.h"
 #include "../serialize.h"
-#include "../llist.h"
 #include "test.h"
 
 int tests_run = 0;
 
 static char* test_next_dir_name() {
-	char* p = "/dir1/directory2/testing/structure";
+	char* p = "dir1/directory2/testing/structure";
 	HeapData path = {0};
 	HeapData name = {0};
 	uint8_t expected1[] = {0x64, 0x69, 0x72, 0x31};
@@ -21,7 +20,7 @@ static char* test_next_dir_name() {
 
 	util_string_to_heap(p, &path);
 
-	int location = 1;
+	int location = 0;
 	int t = util_path_next_dir_name(path, location, &name);
 	location += name.size + 1;	// Add one to get past forward slash	
 	int ret = memcmp(name.data, expected1, name.size);
