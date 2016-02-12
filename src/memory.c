@@ -32,6 +32,9 @@ int mem_alloc(HeapData* heap, int size){
 
 	heap->size = size;
 	heap->valid = 1;
+
+	mem_zero(heap);
+
 	return SUCCESS;
 }
 
@@ -79,6 +82,13 @@ uint8_t mem_read(HeapData heap, int location, int* function_status){
 	}
 
 	return heap.data[location];
+}
+
+int mem_zero(HeapData* heap) {
+	if (!heap->valid) return ERR_INVALID_MEMORY_ACCESS;
+
+	memset(heap->data, 0, heap->size);
+	return SUCCESS;
 }
 
 int mem_write_binary(void* stream, int length, char* path) {

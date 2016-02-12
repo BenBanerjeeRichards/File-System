@@ -17,6 +17,8 @@ int mem_free(HeapData);
 int mem_write(HeapData*, int, uint8_t);
 int mem_write_section(HeapData*, int, HeapData);
 
+// NOTE memory is zero'd when alloced by mem_alloc
+int mem_zero(HeapData*);
 // This function is an exception - the error checking is 
 // passed as an argument. This is so that the returned value
 // is stack allocated within the scope of the calling function
