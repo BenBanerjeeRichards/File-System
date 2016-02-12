@@ -178,5 +178,5 @@ int fs_find_continuous_bitmap_run(Bitmap bitmap, int length, int start_byte, int
 		}
 	}
 	
-	return SUCCESS;
+	return ERR_NO_BITMAP_RUN_FOUND;
 }
