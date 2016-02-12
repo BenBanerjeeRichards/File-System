@@ -29,6 +29,7 @@ static char* test_find_continuous_bitmap_run() {
 	int ret = fs_find_continuous_bitmap_run(bitmap, 17, 3, &start);
 	mu_assert("[MinUnit][TEST} find bitmap run: found bitmap run, but expected error", ret == ERR_NO_BITMAP_RUN_FOUND);
 
+	mem_free(bitmap);
 	return 0;
 }
 
