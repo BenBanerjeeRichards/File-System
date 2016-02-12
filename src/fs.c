@@ -46,7 +46,7 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 
 int fs_write_block(HeapData* disk, HeapData block, int address) {
 	int location = BLOCK_SIZE * address;
-	return mem_write_section(disk, location, &block);
+	return mem_write_section(disk, location, block);
 }
 
 int fs_write_bitmap_bit(Bitmap* bitmap, int bit_address, int value){
@@ -105,7 +105,7 @@ int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
 	if (ret != SUCCESS) return ret;
 	current_location += INCREMENT_8;
 
-	ret = mem_write_section(directory, current_location, &entry.name);
+	ret = mem_write_section(directory, current_location, entry.name);
 	if (ret != SUCCESS) return ret;
 
 	return SUCCESS;

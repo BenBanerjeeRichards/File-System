@@ -61,13 +61,13 @@ int mem_write(HeapData* heap, int location, uint8_t data)
 	return SUCCESS;
 }
 
-int mem_write_section(HeapData* heap, int location, HeapData* data) {
+int mem_write_section(HeapData* heap, int location, HeapData data) {
 	int ret = mem_check_access(*heap, location);
 	if (ret != SUCCESS) return ret;
-	if (!data->valid || data->size <=0) return ERR_INVALID_MEMORY_ACCESS;
-	if (data->size + location > heap->size) return ERR_INVALID_MEMORY_ACCESS;
+	if (!data.valid || data.size <=0) return ERR_INVALID_MEMORY_ACCESS;
+	if (data.size + location > heap->size) return ERR_INVALID_MEMORY_ACCESS;
 
-	memcpy(&heap->data[location], data->data, data->size * sizeof(uint8_t));
+	memcpy(&heap->data[location], data.data, data.size * sizeof(uint8_t));
 	return SUCCESS;
 }
 

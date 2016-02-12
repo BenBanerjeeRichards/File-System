@@ -15,7 +15,7 @@ int mem_alloc(HeapData*, int);
 int mem_realloc(HeapData*, int);
 int mem_free(HeapData);
 int mem_write(HeapData*, int, uint8_t);
-int mem_write_section(HeapData*, int, HeapData*);
+int mem_write_section(HeapData*, int, HeapData);
 
 // This function is an exception - the error checking is 
 // passed as an argument. This is so that the returned value
