@@ -7,3 +7,5 @@
 main
 doc/
 src/test/test.c~
+src/tags
+tags
