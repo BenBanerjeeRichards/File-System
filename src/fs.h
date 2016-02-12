@@ -54,7 +54,7 @@ typedef struct {
 	uint32_t num_used_inodes;
 
 	uint32_t magic_2;
-
+	
 	uint32_t inode_bitmap_size;
 	uint32_t inode_table_size;
 	uint32_t data_block_bitmap_size;
@@ -62,6 +62,15 @@ typedef struct {
 	uint32_t inode_table_start_addr;
 	uint32_t data_block_bitmap_addr;
 	uint32_t data_blocks_start_addr;
+
+	// bitmap_circular_loc - this is an optimisation for quickly finding 
+	// a suitably long continuous region whilst the disk is fairly
+	// unfragmented. The bits are initially allocated from bitmap[0]
+	// to bitmap[N-1]. For the first run through it immediatly allows for 
+	// continuous sections to be allocated. (NB preallocation will allow
+	// for file growth in most situations, reducing fragmentation).
+
+	uint32_t data_bitmap_circular_loc;
 
 	uint16_t flags;
 } Superblock;
@@ -108,5 +117,7 @@ int fs_write_bitmap_bit(Bitmap*, int, int);
 int fs_read_bitmap_bit(Bitmap, int, int*);
 int fs_add_directory_entry(Directory*, DirectoryEntry);
 int fs_directory_get_inode_number(Directory, HeapData, uint32_t*);
+int fs_find_continuous_bitmap_run(Bitmap, int, int, int*);
+
 
 #endif

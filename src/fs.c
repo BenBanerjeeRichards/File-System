@@ -28,20 +28,23 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	superblock->inode_bitmap_size = round_up_nearest_multiple(superblock->num_inodes / 8, superblock->block_size);
 
 	superblock->inode_table_size = round_up_nearest_multiple(superblock->num_inodes * superblock->inode_size, superblock->block_size);
-  	superblock->inode_table_start_addr = 1 + (superblock->inode_bitmap_size / superblock->block_size);
-  	superblock->data_block_bitmap_addr = superblock->inode_table_start_addr + (superblock->inode_table_size / superblock->block_size);
+	superblock->inode_table_start_addr = 1 + (superblock->inode_bitmap_size / superblock->block_size);
+	superblock->data_block_bitmap_addr = superblock->inode_table_start_addr + (superblock->inode_table_size / superblock->block_size);
 
-  	// blocks_remaining is all of the blocks which have not been reserved up to this point
-  	int blocks_remaining = superblock->num_blocks - superblock->data_block_bitmap_addr;
-  	superblock->num_data_blocks = ceil((8.0/9.0) * blocks_remaining);
-  	superblock->data_block_bitmap_size = (blocks_remaining - superblock->num_data_blocks) * superblock->block_size;
+	// blocks_remaining is all of the blocks which have not been reserved up to this point
+	int blocks_remaining = superblock->num_blocks - superblock->data_block_bitmap_addr;
+	superblock->num_data_blocks = ceil((8.0/9.0) * blocks_remaining);
+	superblock->data_block_bitmap_size = (blocks_remaining - superblock->num_data_blocks) * superblock->block_size;
 
-  	superblock->data_blocks_start_addr = superblock->data_block_bitmap_addr + (superblock->data_block_bitmap_size / superblock->block_size);
+	superblock->data_blocks_start_addr = superblock->data_block_bitmap_addr + (superblock->data_block_bitmap_size / superblock->block_size);
+
+	superblock->data_bitmap_circular_loc = 0;
+	superblock->flags= 0;
 
 	return SUCCESS;
 }
 
-int fs_write_block(HeapData* disk, HeapData block, int address) { 
+int fs_write_block(HeapData* disk, HeapData block, int address) {
 	int location = BLOCK_SIZE * address;
 	return mem_write_section(disk, location, &block);
 }
@@ -64,7 +67,7 @@ int fs_write_bitmap_bit(Bitmap* bitmap, int bit_address, int value){
 	return mem_write(bitmap, byte_addr, byte_val);
 }
 
-int fs_read_bitmap_bit(Bitmap bitmap, int bit_address, int* error) 
+int fs_read_bitmap_bit(Bitmap bitmap, int bit_address, int* error)
 {
 	int byte_addr = bit_address / 8;
 	int bit = bit_address - (byte_addr * 8);
@@ -87,7 +90,7 @@ int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
 		ret = mem_realloc(directory, entry_size + directory->size);
 	}
 	if (ret != SUCCESS) return ret;
-	
+
 	const int INCREMENT_8 = 1;
 	const int INCREMENT_16 = 2;
 	const int INCREMENT_32 = 4;
@@ -140,4 +143,40 @@ int fs_directory_get_inode_number(Directory directory, HeapData name, uint32_t* 
 	}
 
 	return ERR_INODE_NOT_FOUND;
+}
+
+int fs_find_continuous_bitmap_run(Bitmap bitmap, int length, int start_byte, int* run_start_bit) {
+	if (!bitmap.valid) return ERR_INVALID_BITMAP;	
+	int current_bit_count = 0;
+	
+	for (int i = 0; i < bitmap.size; i++)
+	{
+		int byte_index = 0;
+		if(i + start_byte + 1 > bitmap.size) {
+			byte_index = (i + start_byte) - bitmap.size;
+		} else {
+			byte_index = i + start_byte;
+		}
+		
+		int error = 0;
+		for (int j = 0; j < 8; j++) {
+			int bit = fs_read_bitmap_bit(bitmap, byte_index * 8 + j, &error);
+
+			if (error != SUCCESS) return error;
+
+			if (bit == 0) {
+				current_bit_count += 1;
+			} else{
+				current_bit_count = 0;
+			}
+			
+			if (current_bit_count == length) {
+				*run_start_bit = byte_index * 8 + j - current_bit_count;
+				return SUCCESS;
+			}
+
+		}
+	}
+	
+	return SUCCESS;
 }
