@@ -118,6 +118,6 @@ int fs_read_bitmap_bit(Bitmap, int, int*);
 int fs_add_directory_entry(Directory*, DirectoryEntry);
 int fs_directory_get_inode_number(Directory, HeapData, uint32_t*);
 int fs_find_continuous_bitmap_run(Bitmap, int, int, int*);
-
+int fs_find_next_bitmap_block(Bitmap, int, int*);
 
 #endif

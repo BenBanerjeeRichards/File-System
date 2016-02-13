@@ -180,3 +180,32 @@ int fs_find_continuous_bitmap_run(Bitmap bitmap, int length, int start_byte, int
 	
 	return ERR_NO_BITMAP_RUN_FOUND;
 }
+
+// TODO debug this function
+int fs_find_next_bitmap_block(Bitmap bitmap, int start_byte, int* block_addr) {
+	if (!bitmap.valid) return ERR_INVALID_BITMAP;	
+	int error = 0;
+
+	for (int i = 0; i < bitmap.size; i++){
+		int byte_index = 0;
+		if(i + start_byte + 1 > bitmap.size) {
+			byte_index = (i + start_byte) - bitmap.size;
+		} else {
+			byte_index = i + start_byte;
+		}
+
+		for (int j = 0; j < 8; j++) {
+			int bit = fs_read_bitmap_bit(bitmap, byte_index * 8 + j, &error);
+
+			if (error != SUCCESS) return error;
+
+			if (bit == 0) {
+				*block_addr = byte_index * 8 + j;
+				return SUCCESS;
+			}
+
+		}
+	}
+	return ERR_BITMAP_NO_FREE_BLOCK;
+}	
+
