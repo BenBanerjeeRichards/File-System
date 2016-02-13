@@ -9,6 +9,28 @@
 
 int tests_run = 0;
 
+static char* test_find_next_bitmap_block() {
+	uint8_t bitmap_data[] = {0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF};
+	int bit = 8 * 2 + 4 + 3;
+	Bitmap bitmap = {0};
+	int start = 4;
+	mem_alloc(&bitmap, 7);
+	memcpy(bitmap.data, bitmap_data, 7);
+
+	int block_addr = 0;
+	fs_find_next_bitmap_block(bitmap, start, &block_addr);
+	printf("%i\n", block_addr);
+	mu_assert("[MinUnit][TEST] find next bitmap block: incorrect block position [1]", bit == block_addr);
+	block_addr = 0;
+	fs_find_next_bitmap_block(bitmap, 0, &block_addr);
+	mu_assert("[MinUnit][TEST] find next bitmap block: incorrect block position [2]", bit == block_addr);
+	block_addr = 0;
+	fs_find_next_bitmap_block(bitmap, 1, &block_addr);
+	mu_assert("[MinUnit][TEST] find next bitmap block: incorrect block position [3]", bit == block_addr);
+		
+	return 0;
+}
+
 static char* test_next_dir_name() {
 	char* p = "dir1/directory2/testing/structure";
 	HeapData path = {0};
@@ -334,6 +356,7 @@ static char* all_tests() {
 	mu_run_test(test_directory_add_entry);
 	mu_run_test(test_find_continuous_bitmap_run);
 	mu_run_test(test_next_dir_name);
+	mu_run_test(test_find_next_bitmap_block);
 	return 0;
 }
 
