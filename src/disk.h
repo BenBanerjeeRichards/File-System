@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "constants.h"
 #include "fs.h"
+#include "bitmap.h"
 
 typedef struct {
 	// Lock the entire disk when a process is accessing it

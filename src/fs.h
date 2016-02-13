@@ -16,7 +16,6 @@
 */
 
 typedef HeapData Directory;
-typedef HeapData Bitmap; 
 typedef HeapData InodeName;
 
 
@@ -113,11 +112,7 @@ typedef struct {
 
 int fs_create_superblock(Superblock*, uint64_t);
 int fs_write_block(HeapData*, HeapData, int);
-int fs_write_bitmap_bit(Bitmap*, int, int);
-int fs_read_bitmap_bit(Bitmap, int, int*);
 int fs_add_directory_entry(Directory*, DirectoryEntry);
 int fs_directory_get_inode_number(Directory, HeapData, uint32_t*);
-int fs_find_continuous_bitmap_run(Bitmap, int, int, int*);
-int fs_find_next_bitmap_block(Bitmap, int, int*);
 
 #endif

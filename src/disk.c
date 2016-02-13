@@ -3,6 +3,7 @@
 
 #include "disk.h"
 #include "constants.h"
+#include "bitmap.h"
 #include "memory.h"
 
 int disk_mount(Disk* disk) {

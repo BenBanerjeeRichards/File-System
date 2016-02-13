@@ -4,6 +4,7 @@
 #include "../fs.h"
 #include "../util.h"
 #include "../memory.h"
+#include "../bitmap.h"
 #include "../serialize.h"
 #include "test.h"
 
@@ -18,14 +19,13 @@ static char* test_find_next_bitmap_block() {
 	memcpy(bitmap.data, bitmap_data, 7);
 
 	int block_addr = 0;
-	fs_find_next_bitmap_block(bitmap, start, &block_addr);
-	printf("%i\n", block_addr);
+	bitmap_find_block(bitmap, start, &block_addr);
 	mu_assert("[MinUnit][TEST] find next bitmap block: incorrect block position [1]", bit == block_addr);
 	block_addr = 0;
-	fs_find_next_bitmap_block(bitmap, 0, &block_addr);
+	bitmap_find_block(bitmap, 0, &block_addr);
 	mu_assert("[MinUnit][TEST] find next bitmap block: incorrect block position [2]", bit == block_addr);
 	block_addr = 0;
-	fs_find_next_bitmap_block(bitmap, 1, &block_addr);
+	bitmap_find_block(bitmap, 1, &block_addr);
 	mu_assert("[MinUnit][TEST] find next bitmap block: incorrect block position [3]", bit == block_addr);
 		
 	return 0;
@@ -92,11 +92,11 @@ static char* test_find_continuous_bitmap_run() {
 	}
 	
 	int start = 0;
-	fs_find_continuous_bitmap_run(bitmap, length, start_byte, &start);
+	bitmap_find_continuous_block_run(bitmap, length, start_byte, &start);
 	
 	mu_assert("[MinUnit][TEST] find bitmap run: incorrect start bit", start == 37);
 	
-	int ret = fs_find_continuous_bitmap_run(bitmap, 17, 3, &start);
+	int ret = bitmap_find_continuous_block_run(bitmap, 17, 3, &start);
 	mu_assert("[MinUnit][TEST} find bitmap run: found bitmap run, but expected error", ret == ERR_NO_BITMAP_RUN_FOUND);
 
 	mem_free(bitmap);
@@ -300,20 +300,20 @@ static char* test_bitmap_io() {
 	mu_assert("[MinUnit][FAIL] bitmap io: failed to alloc block data", ret == SUCCESS);
 
 	ret = 0;
-	ret += fs_write_bitmap_bit(&block, 0, 1);
-	ret += fs_write_bitmap_bit(&block, 1, 0);
-	ret += fs_write_bitmap_bit(&block, 2, 0);
-	ret += fs_write_bitmap_bit(&block, 3, 1);
-	ret += fs_write_bitmap_bit(&block, 4, 0);
-	ret += fs_write_bitmap_bit(&block, 5, 1);
-	ret += fs_write_bitmap_bit(&block, 6, 1);
-	ret += fs_write_bitmap_bit(&block, 7, 0);
-	ret += fs_write_bitmap_bit(&block, 8, 1);
-	ret += fs_write_bitmap_bit(&block, 9, 32);
-	ret += fs_write_bitmap_bit(&block, 10, 0);
-	ret += fs_write_bitmap_bit(&block, 11, 1);
-	ret += fs_write_bitmap_bit(&block, 12, 1);
-	ret += fs_write_bitmap_bit(&block, 13, 1);
+	ret += bitmap_write(&block, 0, 1);
+	ret += bitmap_write(&block, 1, 0);
+	ret += bitmap_write(&block, 2, 0);
+	ret += bitmap_write(&block, 3, 1);
+	ret += bitmap_write(&block, 4, 0);
+	ret += bitmap_write(&block, 5, 1);
+	ret += bitmap_write(&block, 6, 1);
+	ret += bitmap_write(&block, 7, 0);
+	ret += bitmap_write(&block, 8, 1);
+	ret += bitmap_write(&block, 9, 32);
+	ret += bitmap_write(&block, 10, 0);
+	ret += bitmap_write(&block, 11, 1);
+	ret += bitmap_write(&block, 12, 1);
+	ret += bitmap_write(&block, 13, 1);
 	mu_assert("[MinUnit][FAIL] bitmap io: bitmap writing failed (mem error)", ret == SUCCESS);
 
 	uint8_t byte1 = mem_read(block, 0, &ret);
@@ -328,7 +328,7 @@ static char* test_bitmap_io() {
 
 	for (int i = 0; i < 16; i++)
 	{
-		int v = fs_read_bitmap_bit(block, i, &ret);
+		int v = bitmap_read(block, i, &ret);
 		
 		if (i < 8)
 		{
