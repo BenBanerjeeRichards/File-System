@@ -100,3 +100,27 @@ int bitmap_find_block(Bitmap bitmap, int start_byte, int* block_addr) {
 	return ERR_BITMAP_NO_FREE_BLOCK;
 }	
 
+
+int bitmap_find_continuous_run_length(Bitmap bitmap, int start_bit, int* run_length) {
+	if (!bitmap.valid) return ERR_INVALID_BITMAP;
+	if (start_bit < 0 || start_bit > bitmap.size * 8) return ERR_INVALID_MEMORY_ACCESS;
+	int error = 0;
+	*run_length = 0;
+
+	for (int i = start_bit; i < bitmap.size * 8; i++) {
+		int bit = bitmap_read(bitmap, i, &error);
+		
+		if (bit == 1) {
+			// If first bit is 1 then invalid input
+			*run_length = i - start_bit;
+			if (i == start_bit) return ERR_NO_BITMAP_RUN_FOUND;
+			break;
+		}
+	}
+	
+	if (*run_length == 0) {
+		*run_length = bitmap.size * 8 - start_bit;
+	}
+
+	return SUCCESS;
+}

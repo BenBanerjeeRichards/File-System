@@ -10,6 +10,20 @@
 
 int tests_run = 0;
 
+static char* test_find_continuous_run_length() {
+	uint8_t bitmap_data[] = {0xFF, 0xFF, 0xFE, 0x0F, 0xFF, 0xFF, 0xFF};
+	int run_len = 1 + 4;
+	Bitmap bitmap = {0};
+	int start_bit = 23;
+	mem_alloc(&bitmap, 7);
+	
+	int len = 0;
+	bitmap_find_continuous_run_length(bitmap, start_bit, &len);
+	mu_assert("[MinUnit][TEST] find continuous run length: length incorrect", len == run_len);
+
+	return 0;
+}
+
 static char* test_find_next_bitmap_block() {
 	uint8_t bitmap_data[] = {0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF};
 	int bit = 8 * 2 + 4 + 3;
