@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "memory.h"
 #include "constants.h"
+#include "bitmap.h"
 
 /* NOTE: Naming Conventions
 	..._size: 		the size of something in bytes
@@ -15,9 +16,12 @@
 					All blocks minus superblock, bitmaps and inode table
 */
 
+#define ALLOC_FULL_FT_MAX 0.5
+
+
+
 typedef HeapData Directory;
 typedef HeapData InodeName;
-
 
 typedef struct {
 	HeapData data;
@@ -110,9 +114,22 @@ typedef struct {
 	HeapData name;
 } DirectoryEntry;
 
+typedef struct {
+	// Lock the entire disk when a process is accessing it
+	int is_locked;
+
+	// Kept in memory for performance
+	Superblock superblock;
+	Bitmap inode_bitmap;
+	Bitmap data_bitmap;
+	// Using an in memory disk
+	HeapData data;
+} Disk;
+
+
 int fs_create_superblock(Superblock*, uint64_t);
 int fs_write_block(HeapData*, HeapData, int);
 int fs_add_directory_entry(Directory*, DirectoryEntry);
 int fs_directory_get_inode_number(Directory, HeapData, uint32_t*);
-
+int fs_allocate_blocks(Disk*, int, HeapData*);
 #endif

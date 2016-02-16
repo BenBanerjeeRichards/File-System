@@ -7,17 +7,6 @@
 #include "fs.h"
 #include "bitmap.h"
 
-typedef struct {
-	// Lock the entire disk when a process is accessing it
-	int is_locked;
-
-	// Kept in memory for performance
-	Superblock superblock;
-	Bitmap indode_bitmap;
-
-	// Using an in memory disk
-	HeapData data;
-} Disk;
 
 int disk_mount(Disk*);
 int disk_unmount(Disk);

@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "fs.h"
 #include "util.h"
+#include "stream.h"
 
 int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	// Ensure that the superblock is initialised before passing to this func.
@@ -114,4 +115,38 @@ int fs_directory_get_inode_number(Directory directory, HeapData name, uint32_t* 
 	}
 
 	return ERR_INODE_NOT_FOUND;
+}
+
+int fs_allocate_blocks(Disk* disk, int num_blocks, HeapData* addresses) {
+	Superblock* sb = &disk->superblock;		// for convenience 
+	double ft_ratio = (double)sb->num_used_blocks / (double)sb->num_blocks;
+
+	int ret = 0;
+	if (ft_ratio < ALLOC_FULL_FT_MAX) {
+		// Try and find the block run in a single try
+		int start_bit = 0;
+		ret = bitmap_find_continuous_block_run(disk->data_bitmap, 
+				num_blocks, sb->data_bitmap_circular_loc, &start_bit);
+
+		if (ret != SUCCESS && ret != ERR_NO_BITMAP_RUN_FOUND) return ret;
+
+		if (start_bit > 0){
+			sb->data_bitmap_circular_loc = start_bit / 8;
+		}
+
+		printf("%i\n", start_bit);
+
+		BlockSequence seq = {0};
+		seq.length = num_blocks;
+		seq.start_addr = start_bit;
+		ret = stream_add_seq_to_data(addresses, seq); 
+		if (ret != SUCCESS) return ret;
+	}
+
+	if (ret == ERR_NO_BITMAP_RUN_FOUND || ft_ratio >= ALLOC_FULL_FT_MAX) {
+		// Find first blank bit, then find length. Add to current run.
+		// Continue process until all blocks have been allocated.
+	}
+
+	return SUCCESS;
 }

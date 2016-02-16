@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include "../fs.h"
 #include "../util.h"
 #include "../memory.h"
@@ -9,6 +10,32 @@
 #include "test.h"
 
 int tests_run = 0;
+
+static char* test_alloc_blocks_continuous() {
+	Superblock superblock;
+	fs_create_superblock(&superblock, DISK_SIZE);
+	Bitmap block_bitmap = {0};
+	mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
+	
+	int max = 16384;
+	for (int i = 0; i < 8 * max; i++) {
+		if (rand() % 2 == 0) {
+			bitmap_write(&block_bitmap, i, 1);
+		}
+	}
+
+	mem_write(&block_bitmap, max, 0xFF);
+	mem_write(&block_bitmap, max + 10, 0xFF);
+	mem_write(&block_bitmap, max + 63 + 64, 0xFF);
+	Disk disk = {0};
+	disk.superblock = superblock;
+	disk.data_bitmap = block_bitmap;
+	HeapData addresses = {0};
+	int ret = fs_allocate_blocks(&disk, 64, &addresses);
+	mem_dump(block_bitmap, "dump.bin");
+	//printf("%i\n", ret);
+	return 0;
+}
 
 static char* test_find_continuous_run_length() {
 	uint8_t bitmap_data[] = {0xFF, 0xFF, 0xFE, 0x0F, 0xFF, 0xFF, 0xFF};
@@ -371,6 +398,7 @@ static char* all_tests() {
 	mu_run_test(test_find_continuous_bitmap_run);
 	mu_run_test(test_next_dir_name);
 	mu_run_test(test_find_next_bitmap_block);
+	mu_run_test(test_alloc_blocks_continuous);
 	return 0;
 }
 
