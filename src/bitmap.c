@@ -63,7 +63,7 @@ int bitmap_find_continuous_block_run(Bitmap bitmap, int length, int start_byte, 
 			}
 			
 			if (current_bit_count == length) {
-				*run_start_bit = byte_index * 8 + j - current_bit_count;
+				*run_start_bit = byte_index * 8 + j + 1 - current_bit_count;
 				return SUCCESS;
 			}
 
