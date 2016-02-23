@@ -133,8 +133,7 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, HeapData* addresses) {
 		if (start_bit > 0){
 			sb->data_bitmap_circular_loc = start_bit / 8;
 		}
-
-		printf("%i\n", start_bit);
+	
 
 		BlockSequence seq = {0};
 		seq.length = num_blocks;
