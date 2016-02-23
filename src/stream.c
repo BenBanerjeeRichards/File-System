@@ -5,16 +5,16 @@
 int stream_add_seq_to_data(HeapData* data, BlockSequence seq) {
 	int ret = 0;
 	if(!data->valid) {
-		ret = mem_alloc(data, 2);	
+		ret = mem_alloc(data, 8);	
 	} else {
 		mem_realloc(data, data->size + 2);
 	}
 	if (ret != SUCCESS) return ret;
 
-	ret = util_write_uint32(data, data->size - 2, seq.start_addr);
+	ret = util_write_uint32(data, data->size - 8, seq.start_addr);
 	if (ret != SUCCESS) return ret;
 
-	ret = util_write_uint32(data, data->size - 1, seq.length);
+	ret = util_write_uint32(data, data->size - 4, seq.length);
 	if (ret != SUCCESS) return ret;
 
 	return SUCCESS;
