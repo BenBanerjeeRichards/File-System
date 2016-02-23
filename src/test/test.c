@@ -31,9 +31,10 @@ static char* test_alloc_blocks_continuous() {
 	disk.superblock = superblock;
 	disk.data_bitmap = block_bitmap;
 	HeapData addresses = {0};
-	int ret = fs_allocate_blocks(&disk, 64, &addresses);
-	mem_dump(block_bitmap, "dump.bin");
-	//printf("%i\n", ret);
+	int ret = fs_allocate_blocks(&disk, 128 * 8, &addresses);
+	mem_dump(addresses, "dump.bin");	
+	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", ret == 132096);
+	
 	return 0;
 }
 
@@ -47,7 +48,7 @@ static char* test_find_continuous_run_length() {
 	int len = 0;
 	bitmap_find_continuous_run_length(bitmap, start_bit, &len);
 	mu_assert("[MinUnit][TEST] find continuous run length: length incorrect", len == run_len);
-
+	
 	return 0;
 }
 
@@ -125,7 +126,6 @@ static char* test_find_continuous_bitmap_run() {
 	mem_alloc(&bitmap, 10);
 	int start_byte = 7;
 	int length = 15;
-	//uint8_t bitmap_data[] = {0xFE, 0x00, 0x0F, 0xFE, 0xCC, 0x00, 0x06, 0xEE, 0x34, 0x8F};
 	uint8_t bitmap_data[] = {0xFE, 0x00, 0xFF, 0xFE, 0xCC, 0x00, 0x06, 0xEE, 0x34, 0x8F};
 	
 	for (int i = 0; i < 10; i++) {
@@ -135,12 +135,30 @@ static char* test_find_continuous_bitmap_run() {
 	int start = 0;
 	bitmap_find_continuous_block_run(bitmap, length, start_byte, &start);
 	
-	mu_assert("[MinUnit][TEST] find bitmap run: incorrect start bit", start == 37);
+	mu_assert("[MinUnit][TEST] find bitmap run: incorrect start bit", start == 38);
 	
 	int ret = bitmap_find_continuous_block_run(bitmap, 17, 3, &start);
-	mu_assert("[MinUnit][TEST} find bitmap run: found bitmap run, but expected error", ret == ERR_NO_BITMAP_RUN_FOUND);
+	mu_assert("[MinUnit][TEST] find bitmap run: found bitmap run, but expected error", ret == ERR_NO_BITMAP_RUN_FOUND); 
 
 	mem_free(bitmap);
+	return 0;
+}
+
+static char* test_find_continuous_bitmap_run_2()
+{
+	Bitmap bitmap = {0};
+	mem_alloc(&bitmap, 8);
+
+	int length = 2 * 8; // 2 bitmap bytes
+	uint8_t bitmap_data[] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x0E};
+	
+	for (int i = 0; i < 8; i++) {
+		mem_write(&bitmap, i, bitmap_data[i]);
+	}	
+	int start_bit = 0;
+	bitmap_find_continuous_block_run(bitmap, length, 0, &start_bit);
+	mu_assert("[MinUnit][TEST] find bitmap run 2: incorrect start bit", start_bit == 32);
+	
 	return 0;
 }
 
@@ -399,6 +417,7 @@ static char* all_tests() {
 	mu_run_test(test_next_dir_name);
 	mu_run_test(test_find_next_bitmap_block);
 	mu_run_test(test_alloc_blocks_continuous);
+	mu_run_test(test_find_continuous_bitmap_run_2);
 	return 0;
 }
 
