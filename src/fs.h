@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "constants.h"
 #include "bitmap.h"
+#include "../../core/src/llist.h"
 
 /* NOTE: Naming Conventions
 	..._size: 		the size of something in bytes
@@ -20,8 +21,8 @@
 
 
 
-typedef HeapData Directory;
 typedef HeapData InodeName;
+typedef HeapData Directory;
 
 typedef struct {
 	HeapData data;
@@ -42,6 +43,10 @@ typedef struct {
 	uint32_t triple_indirect;
 } DataStream;	
 
+typedef struct {
+	LList location;
+	HeapData name;
+} Path;
 
 typedef struct {
 	uint32_t magic_1;
@@ -131,5 +136,5 @@ int fs_create_superblock(Superblock*, uint64_t);
 int fs_write_block(HeapData*, HeapData, int);
 int fs_add_directory_entry(Directory*, DirectoryEntry);
 int fs_directory_get_inode_number(Directory, HeapData, uint32_t*);
-int fs_allocate_blocks(Disk*, int, HeapData*);
+int fs_allocate_blocks(Disk*, int, LList**);
 #endif

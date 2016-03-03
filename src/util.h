@@ -19,4 +19,6 @@ uint16_t util_read_uint16(HeapData, int, int*);
 uint32_t util_read_uint32(HeapData, int, int*);
 uint64_t util_read_uint64(HeapData, int, int*);
 
+// Free callbacks 
+void free_element_standard(void* element);
 #endif

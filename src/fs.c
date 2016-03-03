@@ -8,6 +8,7 @@
 #include "fs.h"
 #include "util.h"
 #include "stream.h"
+#include "../../core/src/llist.h"
 
 int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	// Ensure that the superblock is initialised before passing to this func.
@@ -117,9 +118,16 @@ int fs_directory_get_inode_number(Directory directory, HeapData name, uint32_t* 
 	return ERR_INODE_NOT_FOUND;
 }
 
-int fs_allocate_blocks(Disk* disk, int num_blocks, HeapData* addresses) {
+// TODO turn this into a non commital function - only finds blocks according to
+// the allocation policy, but does not set bitmap or circular_loc.
+// When allocating data, this will be atomically combined with another function 
+// which actually writes the new allocation meta data to disk.
+// Breaking up the functionality makes the code more testable.
+int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 	Superblock* sb = &disk->superblock;		// for convenience 
 	double ft_ratio = (double)sb->num_used_blocks / (double)sb->num_blocks;
+	*addresses = llist_new();
+	(*addresses)->free_element = &free_element_standard;
 
 	int ret = 0;
 	if (ft_ratio < ALLOC_FULL_FT_MAX) {
@@ -129,17 +137,12 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, HeapData* addresses) {
 				num_blocks, sb->data_bitmap_circular_loc, &start_bit);
 
 		if (ret != SUCCESS && ret != ERR_NO_BITMAP_RUN_FOUND) return ret;
-
-		if (start_bit > 0){
-			sb->data_bitmap_circular_loc = start_bit / 8;
+		if (ret == SUCCESS) {
+			BlockSequence* seq = malloc(sizeof(BlockSequence));
+			seq->length =  123456789; //num_blocks;
+			seq->start_addr = start_bit;
+			llist_insert(*addresses, seq);
 		}
-	
-
-		BlockSequence seq = {0};
-		seq.length = num_blocks;
-		seq.start_addr = start_bit;
-		ret = stream_add_seq_to_data(addresses, seq); 
-		if (ret != SUCCESS) return ret;
 	}
 
 	if (ret == ERR_NO_BITMAP_RUN_FOUND || ft_ratio >= ALLOC_FULL_FT_MAX) {

@@ -199,3 +199,8 @@ uint64_t util_read_uint64(HeapData data, int location, int* function_status)
 
 	return (uint64_t)msb << 32 | lsb;
 }
+
+
+void free_element_standard(void* element) {
+	free(element);
+}
