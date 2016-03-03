@@ -7,6 +7,7 @@
 #include "../memory.h"
 #include "../bitmap.h"
 #include "../serialize.h"
+#include "../../../core/src/llist.h"
 #include "test.h"
 
 int tests_run = 0;
@@ -30,11 +31,13 @@ static char* test_alloc_blocks_continuous() {
 	Disk disk = {0};
 	disk.superblock = superblock;
 	disk.data_bitmap = block_bitmap;
-	HeapData addresses = {0};
+	LList* addresses;
 	int ret = fs_allocate_blocks(&disk, 128 * 8, &addresses);
-	mem_dump(addresses, "dump.bin");	
-	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", ret == 132096);
 	
+	BlockSequence* node = addresses->head->element;
+	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", node->start_addr == 132096);
+	
+	llist_free(addresses);	
 	return 0;
 }
 
@@ -69,7 +72,8 @@ static char* test_find_next_bitmap_block() {
 	block_addr = 0;
 	bitmap_find_block(bitmap, 1, &block_addr);
 	mu_assert("[MinUnit][TEST] find next bitmap block: incorrect block position [3]", bit == block_addr);
-		
+	
+	mem_free(bitmap);
 	return 0;
 }
 
@@ -158,7 +162,7 @@ static char* test_find_continuous_bitmap_run_2()
 	int start_bit = 0;
 	bitmap_find_continuous_block_run(bitmap, length, 0, &start_bit);
 	mu_assert("[MinUnit][TEST] find bitmap run 2: incorrect start bit", start_bit == 32);
-	
+	mem_free(bitmap);	
 	return 0;
 }
 
