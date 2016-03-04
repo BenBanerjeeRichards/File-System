@@ -29,7 +29,7 @@ int mem_alloc(HeapData* heap, int size){
 	}
 
 	memset(heap->data, 0, size);
-
+	
 	heap->size = size;
 	heap->valid = 1;
 

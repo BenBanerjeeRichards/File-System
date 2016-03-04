@@ -36,8 +36,118 @@ static char* test_alloc_blocks_continuous() {
 	
 	BlockSequence* node = addresses->head->element;
 	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", node->start_addr == 132096);
-	
+
 	llist_free(addresses);	
+	return 0;
+}
+
+static char* test_alloc_blocks_non_continuous() {
+	Superblock superblock;
+	fs_create_superblock(&superblock, DISK_SIZE);
+	Bitmap block_bitmap = {0};
+	mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
+	const int start_byte = 50300; // In filler after 10x1024
+
+	// Create filler blocks [blue]
+	HeapData filler_4000 = { 0 };
+	mem_alloc(&filler_4000, 4000);
+	memset(filler_4000.data, 0xFF, filler_4000.size);
+
+	HeapData filler_5000 = { 0 };
+	mem_alloc(&filler_5000, 5000);
+	memset(filler_5000.data, 0xFF, filler_5000.size);
+
+	HeapData filler_10000 = { 0 };
+	mem_alloc(&filler_10000, 10000);
+	memset(filler_10000.data, 0xFF, filler_10000.size);
+
+	HeapData filler_6000 = { 0 };
+	mem_alloc(&filler_6000, 6000);
+	memset(filler_6000.data, 0xFF, filler_6000.size);
+
+	HeapData filler_200 = { 0 };
+	mem_alloc(&filler_200, 200);
+	memset(filler_200.data, 0xFF, filler_200.size);
+
+	// Write fillers at correct locations in bitmap
+	int current_location = 0;
+	int ret = 0;
+	for (int i = 0; i < 10; i++) {
+		ret += mem_write_section(&block_bitmap, current_location, filler_4000);
+		current_location += 4000 + 1024;
+	}
+
+	ret += mem_write_section(&block_bitmap, current_location, filler_5000);
+	current_location += 5000 + 512;
+	ret += mem_write_section(&block_bitmap, current_location, filler_5000);
+	current_location += 5000 + 256;
+	
+	for (int i = 0; i < 2; i++) {
+		ret += mem_write_section(&block_bitmap, current_location, filler_4000);
+		current_location += 4000 + 128;
+	}
+
+	for (int i = 0; i < 2; i++) {
+		ret += mem_write_section(&block_bitmap, current_location, filler_4000);
+		current_location += 4000 + 64;
+	}
+
+	for (int i = 0; i < 4; i++) {
+		ret += mem_write_section(&block_bitmap, current_location, filler_5000);
+		current_location += 5000 + 32;
+	}
+
+	ret += mem_write_section(&block_bitmap, current_location, filler_10000);
+	current_location += 10000 + 200;
+	ret += mem_write_section(&block_bitmap, current_location, filler_6000);
+	current_location += 6000 + 51;
+	ret += mem_write_section(&block_bitmap, current_location, filler_200);
+	current_location += 200 + 5;
+	ret += mem_write_section(&block_bitmap, current_location, filler_200);
+	current_location += 200;
+	
+	mem_dump(block_bitmap, "dump.bin");
+
+	Disk disk = { 0 };
+	disk.superblock = superblock;
+	disk.data_bitmap = block_bitmap;
+	
+	LList* addresses;
+	disk.superblock.data_bitmap_circular_loc = start_byte;
+
+	ret = fs_allocate_blocks(&disk, 11776, &addresses);
+
+	mu_assert("[MinUnit][TEST] alloc blocks non continuous: incorrect number of items in LL",
+		addresses->num_elements == 23);
+
+	LListNode* current = addresses->head;
+	// Expected sizes 
+	// Note that these sizes are the bytes alloc'd in bitmap NOT the number of blocks
+	// blocks = 8 * bytes as 1 block/bit in bitmap
+	int expected_sizes[23] = {512, 256, 128, 128, 64, 64, 32, 32, 32, 32, 
+								200, 51, 5, 1024, 1024, 1024, 1024, 1024,
+								1024, 1024, 1024, 1024, 1024 };
+
+	int expected_locations[14] = {55240, 60752, 65008, 69136, 73264, 77328, 82392, 87424,
+								92456, 97488, 107520, 113720, 113971, 4000};
+
+	for (int i = 0; i < addresses->num_elements; i++) {
+		BlockSequence* seq = current->element;
+		mu_assert("[MinUnit][TEST] alloc blocks non continuous: mis matched expected and actual size",
+			seq->length / 8 == expected_sizes[i]);
+
+		if (i < 14) {
+			mu_assert("[MinUnit][TEST] alloc blocks non continuous: mis matched expected and actual start addr",
+				seq->start_addr / 8 == expected_locations[i]);
+		}
+		else {
+			mu_assert("[MinUnit][TEST] alloc blocks non continuous: mis matched expected and actual start addr",
+				seq->start_addr / 8 == 4000 + (4000 + 1024) * (i-13));
+		}
+
+		current = current->next;
+	}
+
 	return 0;
 }
 
@@ -422,6 +532,7 @@ static char* all_tests() {
 	mu_run_test(test_find_next_bitmap_block);
 	mu_run_test(test_alloc_blocks_continuous);
 	mu_run_test(test_find_continuous_bitmap_run_2);
+	mu_run_test(test_alloc_blocks_non_continuous);
 	return 0;
 }
 

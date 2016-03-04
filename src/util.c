@@ -204,3 +204,4 @@ uint64_t util_read_uint64(HeapData data, int location, int* function_status)
 void free_element_standard(void* element) {
 	free(element);
 }
+
