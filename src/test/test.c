@@ -72,6 +72,7 @@ static char* test_write_data_to_disk() {
 
 
 	fs_write_data_to_disk(&disk, data, *list);
+
 	//mem_dump(disk.data, "dump.bin");
 
 
@@ -213,6 +214,14 @@ static char* test_alloc_blocks_non_continuous() {
 		current = current->next;
 	}
 
+
+
+	// TODO the following tests need to be moved to their own function
+	Inode inode = { 0 };
+	mem_alloc(&disk.data, superblock.num_blocks * BLOCK_SIZE);
+
+	ret = stream_write_addresses(&disk, &inode, *addresses);
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	mem_free(filler_10000);
 	mem_free(filler_200);
@@ -220,12 +229,6 @@ static char* test_alloc_blocks_non_continuous() {
 	mem_free(filler_5000);
 	mem_free(filler_6000);
 
-
-
-	// TODO the following tests need to be moved to their own function
-	Inode inode = { 0 };
-	stream_write_addresses(&disk, &inode, *addresses);
-	llist_free(addresses);
 
 	return 0;
 }
