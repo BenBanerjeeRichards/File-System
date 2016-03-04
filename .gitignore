@@ -10,3 +10,10 @@ src/test/test.c~
 src/tags
 tags
 r.py
+src/Debug/
+src/FileSystem.vcxproj.filters
+src/FileSystem.sln
+*.vcxproj
+*.sdf
+src/FileSystem.opensdf
+src/.vs/FileSystem/v14/.suo
