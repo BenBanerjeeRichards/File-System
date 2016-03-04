@@ -219,6 +219,7 @@ static char* test_alloc_blocks_non_continuous() {
 	// TODO the following tests need to be moved to their own function
 	Inode inode = { 0 };
 	mem_alloc(&disk.data, superblock.num_blocks * BLOCK_SIZE);
+	mem_dump(disk.data, "dump.bin");
 
 	ret = stream_write_addresses(&disk, &inode, *addresses);
 	llist_free(addresses);
