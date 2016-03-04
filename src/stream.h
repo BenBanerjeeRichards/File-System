@@ -9,5 +9,6 @@
 
 int stream_ds_to_data(DataStream, Disk, HeapData*);
 int stream_add_seq_to_data(HeapData* data, BlockSequence seq); 
+int stream_write_addresses(Disk* disk, Inode* inode, LList addresses);
 
 #endif

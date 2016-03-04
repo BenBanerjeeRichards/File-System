@@ -1,6 +1,7 @@
 #include "stream.h"
 #include "util.h"
 #include <string.h>
+#include <math.h>
 
 int stream_add_seq_to_data(HeapData* data, BlockSequence seq) {
 	int ret = 0;
@@ -52,11 +53,58 @@ int stream_ds_to_data(DataStream stream, Disk disk, HeapData* data) {
 	for (int i = 0; i < DIRECT_BLOCK_NUM; i++) {
 		if (stream.direct[i].length == 0) {
 			return SUCCESS;
-		}
+	}
 
 		ret = stream_add_seq_to_data(data, stream.direct[i]);
 		if (ret != SUCCESS) return ret;
 	}
 
 	return SUCCESS;
+}
+
+int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
+	// Firstly calculate data that needs to be alloc'd for storing non-directs
+	const int num_non_directs = addresses.num_elements < DIRECT_BLOCK_NUM ? 0 : addresses.num_elements - DIRECT_BLOCK_NUM;
+	const int addresses_per_block = BLOCK_SIZE / ADDRESS_SIZE;
+	const int num_non_direct_blocks = ceil((double)num_non_directs / (double)addresses_per_block);
+
+	// Allocate non direct blocks
+	LList* non_direct_block_addresses;
+	int ret = fs_allocate_blocks(disk, num_non_direct_blocks * BLOCK_SIZE, &non_direct_block_addresses);
+	if (ret != SUCCESS) return ret;
+
+	HeapData serialized_address = { 0 };
+	ret = mem_alloc(&serialized_address, (addresses.num_elements - DIRECT_BLOCK_NUM) * ADDRESS_SIZE);
+	if (ret != SUCCESS) return ret;
+
+	LListNode* current = addresses.head;
+
+	for (int i = 0; i < addresses.num_elements; i++) {
+		if (i < DIRECT_BLOCK_NUM) {
+			inode->data.direct[i] = *(BlockSequence*)current->element;
+		}
+		else {
+			// TODO move to function
+			BlockSequence* seq = current->element;
+			const int current_location = (i - DIRECT_BLOCK_NUM) * ADDRESS_SIZE;
+
+			ret = util_write_uint32(&serialized_address, current_location, seq->start_addr);
+			if (ret != SUCCESS) return ret;
+
+			ret = util_write_uint32(&serialized_address, current_location + 4, seq->length);
+			if (ret != SUCCESS) return ret;
+		}
+
+		current = current->next;
+	}
+
+	if (serialized_address.size > 0) {
+		// Write the addresses to the file
+		ret = fs_write_data_to_disk(disk, serialized_address, *non_direct_block_addresses);
+		mem_dump(disk->data, "dump.bin");
+		if (ret != SUCCESS) return ret;
+	}
+
+	return SUCCESS;
+
 }

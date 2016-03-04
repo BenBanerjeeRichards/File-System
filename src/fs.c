@@ -170,14 +170,14 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 
 	return SUCCESS;
 }
+
 int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses) {
 	if (!disk->data.valid) return ERR_INVALID_MEMORY_ACCESS;
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
 
 	int bytes_written = 0;
 	LListNode* current = addresses.head;
-
-	while (bytes_written < data.size) {
+	while (bytes_written < data.size && current != NULL) {
 		if (addresses.head == NULL) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
 		BlockSequence* seq = current->element;
 
