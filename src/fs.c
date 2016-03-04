@@ -118,13 +118,8 @@ int fs_directory_get_inode_number(Directory directory, HeapData name, uint32_t* 
 	return ERR_INODE_NOT_FOUND;
 }
 
-// TODO turn this into a non commital function - only finds blocks according to
-// the allocation policy, but does not set bitmap or circular_loc.
-// When allocating data, this will be atomically combined with another function 
-// which actually writes the new allocation meta data to disk.
-// Breaking up the functionality makes the code more testable.
 int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
-	Superblock* sb = &disk->superblock;		// for convenience 
+	Superblock* sb = &disk->superblock;	
 	double ft_ratio = (double)sb->num_used_blocks / (double)sb->num_blocks;
 	*addresses = llist_new();
 	(*addresses)->free_element = &free_element_standard;
@@ -171,9 +166,6 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 			seq->start_addr = run_start_bit;
 			llist_insert(*addresses, seq);
 		}
-
-
-
 	}
 
 	return SUCCESS;
