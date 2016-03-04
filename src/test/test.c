@@ -7,10 +7,76 @@
 #include "../memory.h"
 #include "../bitmap.h"
 #include "../serialize.h"
+#include "../stream.h"
 #include "../../../core/src/llist.h"
 #include "test.h"
 
 int tests_run = 0;
+
+static char* test_write_data_to_disk() {
+	LList* list = llist_new();
+	list->free_element = &free_element_standard;
+
+	BlockSequence* seq1 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq2 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq3 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq4 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq5 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq6 = malloc(sizeof(BlockSequence));
+
+	seq1->start_addr = 5;
+	seq1->length = 20;
+
+	seq2->start_addr = 50;
+	seq2->length = 2;
+
+	seq3->start_addr = 60;
+	seq3->length = 8;
+
+	seq4->start_addr = 100;
+	seq4->length = 1;
+
+	seq5->start_addr = 110;
+	seq5->length = 9;
+	
+	seq6->start_addr = 200;
+	seq6->length = 10;
+
+	llist_insert(list, seq1);
+	llist_insert(list, seq2);
+	llist_insert(list, seq3);
+	llist_insert(list, seq4);
+	llist_insert(list, seq5);
+	llist_insert(list, seq6);
+
+	HeapData data = { 0 };
+	mem_alloc(&data, 50);
+	
+	HeapData disk_data = { 0 };
+	mem_alloc(&disk_data, 512);
+
+	Disk disk = { 0 };
+	disk.data = disk_data;
+
+
+	uint8_t values[50] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 
+						  0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0xA1, 0xA2, 0xA3, 
+						  0xB1, 0xB2, 0xB3, 0xB4, 0xC1, 0xC2, 0xC3, 0xC4, 0xD1, 
+						  0xE1, 0xE2, 0xE3, 0xE4, 0xF1, 0xF2, 0xF3, 0xF4, 0x34, 
+						  0x53, 0x12, 0x98, 0x23, 0x63, 0x73, 0x27, 0x73, 0xf9,
+						  0xA5, 0xA6, 0xA7, 0xA9, 0xF7};
+
+	for (int i = 0; i < 50; i++) {
+		mem_write(&data, i, values[i]);
+	}
+
+
+	fs_write_data_to_disk(&disk, data, *list);
+	//mem_dump(disk.data, "dump.bin");
+
+
+	return 0;
+}
 
 static char* test_alloc_blocks_continuous() {
 	Superblock superblock;
@@ -38,6 +104,7 @@ static char* test_alloc_blocks_continuous() {
 	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", node->start_addr == 132096);
 
 	llist_free(addresses);	
+	mem_free(block_bitmap);
 	return 0;
 }
 
@@ -106,8 +173,6 @@ static char* test_alloc_blocks_non_continuous() {
 	ret += mem_write_section(&block_bitmap, current_location, filler_200);
 	current_location += 200;
 	
-	mem_dump(block_bitmap, "dump.bin");
-
 	Disk disk = { 0 };
 	disk.superblock = superblock;
 	disk.data_bitmap = block_bitmap;
@@ -147,6 +212,20 @@ static char* test_alloc_blocks_non_continuous() {
 
 		current = current->next;
 	}
+
+	mem_free(disk.data_bitmap);
+	mem_free(filler_10000);
+	mem_free(filler_200);
+	mem_free(filler_4000);
+	mem_free(filler_5000);
+	mem_free(filler_6000);
+
+
+
+	// TODO the following tests need to be moved to their own function
+	Inode inode = { 0 };
+	stream_write_addresses(&disk, &inode, *addresses);
+	llist_free(addresses);
 
 	return 0;
 }
@@ -533,6 +612,8 @@ static char* all_tests() {
 	mu_run_test(test_alloc_blocks_continuous);
 	mu_run_test(test_find_continuous_bitmap_run_2);
 	mu_run_test(test_alloc_blocks_non_continuous);
+	mu_run_test(test_write_data_to_disk);
+
 	return 0;
 }
 
