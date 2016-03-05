@@ -51,11 +51,22 @@ static char* test_disk_io() {
 	HeapData read_3 = disk_read(disk, 0, 1, &ret);
 	HeapData read_1 = disk_read(disk, 255, 255, &ret);
 	HeapData read_2 = disk_read(disk, 14, 5, &ret);
-	mem_dump(read_1, "read1.bin");
 	int cmp = memcmp(read_1.data, data_1.data, read_1.size);
 	cmp += memcmp(read_2.data, data_2.data, read_2.size);
 	cmp += memcmp(read_3.data, data_3.data, read_3.size);
 	mu_assert("[MinUnit][TEST] disk io: Comparison failed", cmp == 0);
+
+
+	for (int i = 0; i < 10; i++){
+		if (i < 5) {
+			mem_write(&data_4, i, 0xAA);
+		}
+		else {
+			mem_write(&data_4, i,  0xBB);
+		}
+	}
+
+	ret = disk_write_offset(&disk, DISK_SIZE - 5 - 128, 128, data_4);
 
 
 	disk_unmount(disk);
@@ -273,14 +284,14 @@ static char* test_alloc_blocks_non_continuous() {
 	printf("%i:%i\n", ret, disk.data.size);
 	mem_dump(disk.data, "dump.bin");
 
-	/*llist_free(addresses);
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	mem_free(filler_10000);
 	mem_free(filler_200);
 	mem_free(filler_4000);
 	mem_free(filler_5000);
 	mem_free(filler_6000);
-	*/
+	
 
 	return 0;
 }

@@ -39,8 +39,6 @@ int disk_write(Disk* disk, int location, HeapData data) {
 	ret = fwrite(data.data, sizeof(uint8_t), data.size, disk->file);
 	if (ret == -1) return ERR_INVALID_FILE_OPERATION;
 
-
-	printf("Wrote to %i size %i\n", location, data.size);
 	if (ret != data.size) return ERR_PARTIAL_FILE_WRITE;
 	return SUCCESS;
 }
@@ -85,5 +83,49 @@ HeapData disk_read(Disk disk, int location, int size, int* error) {
 
 	*error = SUCCESS;
 	return data_read;
+
+}
+
+int disk_write_offset(Disk* disk, int location, int offset, HeapData data) {
+	// Writes data at an offset
+	// i.e. starts write at location + offset.
+	// Will wrap data to start of offset if needed
+
+	if (location < 0 || location > DISK_SIZE) return ERR_INVALID_FILE_OPERATION;
+	if (offset < 0 || offset > DISK_SIZE) return ERR_INVALID_FILE_OPERATION;
+	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
+	if (data.size <= 0) return ERR_INVALID_MEMORY_ACCESS;
+
+	int ret = 0;
+	int start_write_loc = offset + location;
+	
+	if (start_write_loc + data.size > DISK_SIZE) {
+		// Create data subsets
+		// data_1: From start_write_loc to end of the file
+		// data_2: From beginning of file to data.size - data_1_size
+		int data_1_size = DISK_SIZE - start_write_loc;
+		int data_2_size = data.size - data_1_size;
+
+		// Write to the end of the file (data 1)
+		int temp_size = data.size;
+		data.size = data_1_size;
+		ret = disk_write(disk, start_write_loc, data);
+		data.size = temp_size;
+		if (ret != SUCCESS) return ret;
+
+		// Write from beginning of file (data 2)
+		HeapData data_2 = { 0 };
+		ret = mem_alloc(&data_2, data_2_size);
+		if (ret != SUCCESS) return ret;
+
+		memcpy(data_2.data, &data.data[data_1_size], data_2_size);
+		ret = disk_write(disk, offset, data_2);
+		if (ret != SUCCESS) return ret;
+	}
+	else {
+		return disk_write(disk, start_write_loc, data);
+	}
+
+	return SUCCESS;
 
 }
