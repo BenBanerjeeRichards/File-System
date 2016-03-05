@@ -199,6 +199,7 @@ static char* test_alloc_blocks_non_continuous() {
 
 	for (int i = 0; i < addresses->num_elements; i++) {
 		BlockSequence* seq = current->element;
+
 		mu_assert("[MinUnit][TEST] alloc blocks non continuous: mis matched expected and actual size",
 			seq->length / 8 == expected_sizes[i]);
 
