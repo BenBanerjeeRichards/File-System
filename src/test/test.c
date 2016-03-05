@@ -13,6 +13,11 @@
 
 int tests_run = 0;
 
+// TODO:	- Mother's day card
+//			- Comlete test + organise + commit
+//			- Fix memory leaks
+//			- General code clean-up
+
 static char* test_disk_io() {
 	Disk disk = { 0 };
 	disk_mount(&disk);
@@ -67,6 +72,10 @@ static char* test_disk_io() {
 	}
 
 	ret = disk_write_offset(&disk, DISK_SIZE - 5 - 128, 128, data_4);
+	HeapData read = disk_read_offset(disk, DISK_SIZE - 5 - 128, 128, 10, &ret);
+
+	cmp = memcmp(read.data, data_4.data, read.size);
+	mu_assert("[MinUnit][TEST] disk io: Comparison failed (2)", cmp == 0);
 
 
 	disk_unmount(disk);

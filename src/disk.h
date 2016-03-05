@@ -13,5 +13,5 @@ int disk_unmount(Disk);
 int disk_write(Disk*, int, HeapData);
 int disk_write_offset(Disk* disk, int location, int offset, HeapData data);
 HeapData disk_read(Disk disk, int location, int size, int* error);
-
+HeapData disk_read_offset(Disk disk, int location, int offset, int size, int* error);
 #endif

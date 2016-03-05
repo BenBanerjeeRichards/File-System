@@ -129,3 +129,62 @@ int disk_write_offset(Disk* disk, int location, int offset, HeapData data) {
 	return SUCCESS;
 
 }
+
+HeapData disk_read_offset(Disk disk, int location, int offset, int size, int* error){
+	HeapData read_data = { 0 };
+	if (location < 0 || location > DISK_SIZE) {
+		*error = ERR_INVALID_FILE_OPERATION;
+		return read_data;
+	}
+
+	if (offset < 0 || offset > DISK_SIZE) {
+		*error = ERR_INVALID_FILE_OPERATION;
+		return read_data;
+	}
+
+	if (size <= 0) {
+		*error = ERR_INVALID_MEMORY_ACCESS;
+		return read_data;
+	}
+
+	if (size < 0 || size > DISK_SIZE) {
+		*error = ERR_INVALID_FILE_OPERATION;
+		return read_data;
+	}
+
+	int ret = 0;
+	int start_read_loc = offset + location;
+
+	if (start_read_loc + size > DISK_SIZE) {
+		int read_1_size = DISK_SIZE - start_read_loc;
+		int read_2_size = size - read_1_size;
+
+		HeapData read_1 = disk_read(disk, start_read_loc, read_1_size, &ret);
+		if (ret != SUCCESS) {
+			*error = ret;
+			return read_data;
+		}
+
+		HeapData read_2 = disk_read(disk, offset, read_2_size, &ret);
+		if (ret != SUCCESS) {
+			*error = ret;
+			return read_data;
+		}
+	
+		// Combine together
+		mem_alloc(&read_data, read_1.size + read_2.size);
+		memcpy(read_data.data, read_1.data, read_1.size);
+		memcpy(&read_data.data[read_1.size], read_2.data, read_2.size);
+		mem_free(read_1);
+		mem_free(read_2);
+		return read_data;
+	}
+	else {
+		read_data = disk_read(disk, offset, size, &ret);
+		if (ret != SUCCESS) {
+			*error = ret;
+		}
+
+		return read_data;
+	}
+}
