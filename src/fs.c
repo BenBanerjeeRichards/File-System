@@ -46,12 +46,6 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	return SUCCESS;
 }
 
-int fs_write_block(HeapData* disk, HeapData block, int address) {
-	int location = BLOCK_SIZE * address;
-	return mem_write_section(disk, location, block);
-}
-
-
 int fs_add_directory_entry(Directory* directory, DirectoryEntry entry) {
 	if (entry.name.size > 0xFF) return ERR_INODE_NAME_TOO_LARGE;
 	const int entry_size = entry.name.size + 5;
