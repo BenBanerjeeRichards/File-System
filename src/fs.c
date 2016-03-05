@@ -132,6 +132,8 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 			seq->start_addr = start_bit;
 			llist_insert(*addresses, seq);
 		}
+
+		sb->data_bitmap_circular_loc = (start_bit / 8);
 	}
 
 	if (ret == ERR_NO_BITMAP_RUN_FOUND || ft_ratio >= ALLOC_FULL_FT_MAX) {
@@ -159,6 +161,8 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 			seq->length = length;
 			seq->start_addr = run_start_bit;
 			llist_insert(*addresses, seq);
+
+			sb->data_bitmap_circular_loc = (run_start_bit / 8);
 		}
 	}
 
