@@ -13,6 +13,55 @@
 
 int tests_run = 0;
 
+static char* test_disk_io() {
+	Disk disk = { 0 };
+	disk_mount(&disk);
+
+
+	HeapData data_1 = { 0 };
+	HeapData data_2 = { 0 };
+	HeapData data_3 = { 0 };
+	HeapData data_4 = { 0 };
+
+
+	mem_alloc(&data_1, 255);
+	mem_alloc(&data_2, 5);
+	mem_alloc(&data_3, 1);
+	mem_alloc(&data_4, 10);
+
+	for (int i = 0; i < 255; i++){
+		mem_write(&data_1, i, i);
+	}
+
+	mem_write(&data_2, 0, 0xAA);
+	mem_write(&data_2, 1, 0xBB);
+	mem_write(&data_2, 2, 0xCC);
+	mem_write(&data_2, 3, 0xDD);
+	mem_write(&data_2, 4, 0xEE);
+
+	mem_write(&data_3, 0, 0x17);
+
+	disk_write(&disk, 0, data_3);
+	disk_write(&disk, 255, data_1);
+	disk_write(&disk, 14, data_2);
+
+	int ret = disk_write(&disk, DISK_SIZE - 8, data_4);
+	mu_assert("[MinUnit][TEST] disk io: Expected write to fail (data too large)", ret == ERR_DATA_TOO_LARGE);
+
+	HeapData read_3 = disk_read(disk, 0, 1, &ret);
+	HeapData read_1 = disk_read(disk, 255, 255, &ret);
+	HeapData read_2 = disk_read(disk, 14, 5, &ret);
+	mem_dump(read_1, "read1.bin");
+	int cmp = memcmp(read_1.data, data_1.data, read_1.size);
+	cmp += memcmp(read_2.data, data_2.data, read_2.size);
+	cmp += memcmp(read_3.data, data_3.data, read_3.size);
+	mu_assert("[MinUnit][TEST] disk io: Comparison failed", cmp == 0);
+
+
+	disk_unmount(disk);
+	return 0;
+}
+
 static char* test_write_data_to_disk() {
 	LList* list = llist_new();
 	list->free_element = &free_element_standard;
@@ -69,7 +118,6 @@ static char* test_write_data_to_disk() {
 	for (int i = 0; i < 50; i++) {
 		mem_write(&data, i, values[i]);
 	}
-
 
 	fs_write_data_to_disk(&disk, data, *list);
 
@@ -219,18 +267,20 @@ static char* test_alloc_blocks_non_continuous() {
 
 	// TODO the following tests need to be moved to their own function
 	Inode inode = { 0 };
-	mem_alloc(&disk.data, superblock.num_blocks * BLOCK_SIZE);
+	ret = mem_alloc(&disk.data, superblock.num_blocks * BLOCK_SIZE);
+	disk.superblock.data_bitmap_circular_loc = 0;
+	ret = stream_write_addresses(&disk, &inode, *addresses);
+	printf("%i:%i\n", ret, disk.data.size);
 	mem_dump(disk.data, "dump.bin");
 
-	ret = stream_write_addresses(&disk, &inode, *addresses);
-	llist_free(addresses);
+	/*llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	mem_free(filler_10000);
 	mem_free(filler_200);
 	mem_free(filler_4000);
 	mem_free(filler_5000);
 	mem_free(filler_6000);
-
+	*/
 
 	return 0;
 }
@@ -618,6 +668,7 @@ static char* all_tests() {
 	mu_run_test(test_find_continuous_bitmap_run_2);
 	mu_run_test(test_alloc_blocks_non_continuous);
 	mu_run_test(test_write_data_to_disk);
+	mu_run_test(test_disk_io);
 
 	return 0;
 }

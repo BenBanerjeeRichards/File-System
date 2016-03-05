@@ -127,8 +127,12 @@ typedef struct {
 	Superblock superblock;
 	Bitmap inode_bitmap;
 	Bitmap data_bitmap;
-	// Using an in memory disk
+	// For an in memory disk
 	HeapData data;
+
+	// For using a file
+	FILE* file;
+
 } Disk;
 
 

@@ -183,9 +183,9 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses) {
 	int bytes_written = 0;
 	LListNode* current = addresses.head;
 	while (bytes_written < data.size && current != NULL) {
-		if (addresses.head == NULL) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
+		if (current == NULL) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
 		BlockSequence* seq = current->element;
-
+		
 		memcpy(&disk->data.data[seq->start_addr], &data.data[bytes_written], seq->length);
 		bytes_written += seq->length;
 
