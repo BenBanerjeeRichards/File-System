@@ -112,6 +112,39 @@ int fs_directory_get_inode_number(Directory directory, HeapData name, uint32_t* 
 	return ERR_INODE_NOT_FOUND;
 }
 
+// Allocation policy for heavily fragmented disks
+int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
+	// Grows as spaces are found
+	int allocated_bytes = 0;
+	// Where to start searching from, updated and wrapped around disk
+	int current_byte = disk->superblock.data_bitmap_circular_loc;
+
+	while (allocated_bytes < num_blocks) {
+		int run_start_bit = 0;
+		int length = 0;
+		// Look for size of 1 then find total size
+		// Doesn't work well for small allocations FIXME
+		int r = bitmap_find_continuous_block_run(disk->data_bitmap, 1, current_byte,
+			&run_start_bit);
+
+		if (r != SUCCESS) return r;
+
+		r = bitmap_find_continuous_run_length(disk->data_bitmap, run_start_bit, &length);
+		current_byte = (run_start_bit / 8) + 2 + (length / 8);
+		allocated_bytes += length / 8;
+
+		// Add allocation to LL
+		BlockSequence* seq = malloc(sizeof(BlockSequence));
+		seq->length = length;
+		seq->start_addr = run_start_bit;
+		llist_insert(*addresses, seq);
+
+		disk->superblock.data_bitmap_circular_loc = run_start_bit / 8;
+	}
+
+	return SUCCESS;
+}
+
 int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 	Superblock* sb = &disk->superblock;	
 	double ft_ratio = (double)sb->num_used_blocks / (double)sb->num_blocks;
@@ -137,33 +170,7 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 	}
 
 	if (ret == ERR_NO_BITMAP_RUN_FOUND || ft_ratio >= ALLOC_FULL_FT_MAX) {
-		// Grows as spaces are found
-		int allocated_bytes = 0;
-		// Where to start searching from, updated and wrapped around disk
-		int current_byte = sb->data_bitmap_circular_loc;
-
-		while (allocated_bytes < num_blocks) {
-			int run_start_bit = 0;
-			int length = 0;
-			// Look for size of 1 then find total size
-			// Doesn't work well for small allocations FIXME
-			int r = bitmap_find_continuous_block_run(disk->data_bitmap, 1, current_byte, 
-				&run_start_bit);
-
-			if (r != SUCCESS) return r;
-			
-			r = bitmap_find_continuous_run_length(disk->data_bitmap, run_start_bit, &length);
-			current_byte = (run_start_bit / 8) + 2 + (length / 8);
-			allocated_bytes += length / 8;
-
-			// Add allocation to LL
-			BlockSequence* seq = malloc(sizeof(BlockSequence));
-			seq->length = length;
-			seq->start_addr = run_start_bit;
-			llist_insert(*addresses, seq);
-
-			sb->data_bitmap_circular_loc = run_start_bit / 8;
-		}
+		_fs_allocate_fragmented(disk, num_blocks, addresses);
 	}
 
 	return SUCCESS;
