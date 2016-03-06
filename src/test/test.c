@@ -13,7 +13,7 @@
 
 int tests_run = 0;
 
-// TODO:	- Mother's day card
+// TODO:
 //			- Comlete test + organise + commit
 //			- Fix memory leaks
 //			- General code clean-up
@@ -60,26 +60,45 @@ static char* test_disk_io() {
 	cmp += memcmp(read_2.data, data_2.data, read_2.size);
 	cmp += memcmp(read_3.data, data_3.data, read_3.size);
 	mu_assert("[MinUnit][TEST] disk io: Comparison failed", cmp == 0);
+	disk_unmount(disk);
 
+	mem_free(data_1);
+	mem_free(data_2);
+	mem_free(data_3);
+	mem_free(data_4);
+	mem_free(read_1);
+	mem_free(read_2);
+	mem_free(read_3);
+	return 0;
+}
 
-	for (int i = 0; i < 10; i++){
+static char* test_disk_io_2() {
+	Disk disk = { 0 };
+	disk_mount(&disk);
+	HeapData data = {0};
+	mem_alloc(&data, 10);
+
+	for (int i = 0; i < 10; i++) {
 		if (i < 5) {
-			mem_write(&data_4, i, 0xAA);
+			mem_write(&data, i, 0xAA);
 		}
 		else {
-			mem_write(&data_4, i,  0xBB);
+			mem_write(&data, i, 0xBB);
 		}
 	}
 
-	ret = disk_write_offset(&disk, DISK_SIZE - 5 - 128, 128, data_4);
+	int ret = disk_write_offset(&disk, DISK_SIZE - 5 - 128, 128, data);
 	HeapData read = disk_read_offset(disk, DISK_SIZE - 5 - 128, 128, 10, &ret);
 
-	cmp = memcmp(read.data, data_4.data, read.size);
-	mu_assert("[MinUnit][TEST] disk io: Comparison failed (2)", cmp == 0);
+	int cmp = memcmp(read.data, data.data, read.size);
+	mu_assert("[MinUnit][TEST] disk io 2: Comparison failed", cmp == 0);
 
 
 	disk_unmount(disk);
+	mem_free(data);
+	mem_free(read);
 	return 0;
+
 }
 
 static char* test_write_data_to_disk() {
@@ -140,7 +159,9 @@ static char* test_write_data_to_disk() {
 	}
 
 	fs_write_data_to_disk(&disk, data, *list);
-
+	mem_free(data);
+	mem_free(disk_data);
+	llist_free(list);
 	//mem_dump(disk.data, "dump.bin");
 
 
@@ -283,14 +304,11 @@ static char* test_alloc_blocks_non_continuous() {
 		current = current->next;
 	}
 
-
-
 	// TODO the following tests need to be moved to their own function
 	Inode inode = { 0 };
 	ret = mem_alloc(&disk.data, superblock.num_blocks * BLOCK_SIZE);
 	disk.superblock.data_bitmap_circular_loc = 0;
 	ret = stream_write_addresses(&disk, &inode, *addresses);
-	printf("%i:%i\n", ret, disk.data.size);
 	mem_dump(disk.data, "dump.bin");
 
 	llist_free(addresses);
@@ -300,7 +318,8 @@ static char* test_alloc_blocks_non_continuous() {
 	mem_free(filler_4000);
 	mem_free(filler_5000);
 	mem_free(filler_6000);
-	
+
+	mem_free(disk.data);
 
 	return 0;
 }
@@ -689,6 +708,7 @@ static char* all_tests() {
 	mu_run_test(test_alloc_blocks_non_continuous);
 	mu_run_test(test_write_data_to_disk);
 	mu_run_test(test_disk_io);
+	mu_run_test(test_disk_io_2);
 
 	return 0;
 }

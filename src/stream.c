@@ -101,6 +101,8 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	if (serialized_address.size > 0) {
 		// Write the addresses to the file
 		ret = fs_write_data_to_disk(disk, serialized_address, *non_direct_block_addresses);
+		mem_free(serialized_address);
+		llist_free(non_direct_block_addresses);
 		if (ret != SUCCESS) return ret;
 	}
 

@@ -17,7 +17,9 @@ int disk_mount(Disk* disk) {
 	// This also memsets all data to 0
 	mem_alloc(&data, DISK_SIZE);
 
-	return disk_write(disk, 0, data);
+	int ret = disk_write(disk, 0, data);
+	mem_free(data);
+	return ret;
 }
 
 int disk_unmount(Disk disk) {
@@ -120,7 +122,10 @@ int disk_write_offset(Disk* disk, int location, int offset, HeapData data) {
 
 		memcpy(data_2.data, &data.data[data_1_size], data_2_size);
 		ret = disk_write(disk, offset, data_2);
+		mem_free(data_2);
 		if (ret != SUCCESS) return ret;
+
+
 	}
 	else {
 		return disk_write(disk, start_write_loc, data);
