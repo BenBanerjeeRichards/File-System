@@ -13,11 +13,6 @@
 
 int tests_run = 0;
 
-// TODO:
-//			- Comlete test + organise + commit
-//			- Fix memory leaks
-//			- General code clean-up
-
 static char* test_disk_io() {
 	Disk disk = { 0 };
 	disk_mount(&disk);
@@ -69,6 +64,7 @@ static char* test_disk_io() {
 	mem_free(read_1);
 	mem_free(read_2);
 	mem_free(read_3);
+	disk_remove(FILESYSTEM_FILE_NAME);
 	return 0;
 }
 
@@ -97,6 +93,7 @@ static char* test_disk_io_2() {
 	disk_unmount(disk);
 	mem_free(data);
 	mem_free(read);
+	disk_remove(FILESYSTEM_FILE_NAME);
 	return 0;
 
 }
@@ -162,7 +159,6 @@ static char* test_write_data_to_disk() {
 	mem_free(data);
 	mem_free(disk_data);
 	llist_free(list);
-	//mem_dump(disk.data, "dump.bin");
 
 
 	return 0;
@@ -173,7 +169,7 @@ static char* test_alloc_blocks_continuous() {
 	fs_create_superblock(&superblock, DISK_SIZE);
 	Bitmap block_bitmap = {0};
 	mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
-	
+	printf("%i\n bytes", superblock.num_data_blocks * BLOCK_SIZE);
 	int max = 16384;
 	for (int i = 0; i < 8 * max; i++) {
 		if (rand() % 2 == 0) {
@@ -309,7 +305,6 @@ static char* test_alloc_blocks_non_continuous() {
 	ret = mem_alloc(&disk.data, superblock.num_blocks * BLOCK_SIZE);
 	disk.superblock.data_bitmap_circular_loc = 0;
 	ret = stream_write_addresses(&disk, &inode, *addresses);
-	mem_dump(disk.data, "dump.bin");
 
 	llist_free(addresses);
 	mem_free(disk.data_bitmap);

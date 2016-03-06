@@ -193,3 +193,7 @@ HeapData disk_read_offset(Disk disk, int location, int offset, int size, int* er
 		return read_data;
 	}
 }
+int disk_remove(const char* name) {
+	int ret = remove(name);
+	return (ret == 0) ? SUCCESS : ERR_FILE_OPERATION_FAILED;
+}
