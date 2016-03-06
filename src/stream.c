@@ -62,6 +62,16 @@ int stream_ds_to_data(DataStream stream, Disk disk, HeapData* data) {
 	return SUCCESS;
 }
 
+int _stream_write_seq_to_heap(BlockSequence seq, HeapData* data, int location) {
+	int ret = util_write_uint32(data, location, seq.start_addr);
+	if (ret != SUCCESS) return ret;
+
+	ret = util_write_uint32(data, location + 4, seq.length);
+	if (ret != SUCCESS) return ret;
+
+	return SUCCESS;
+}
+
 int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	// Firstly calculate data that needs to be alloc'd for storing non-directs
 	const int num_non_directs = addresses.num_elements < DIRECT_BLOCK_NUM ? 0 : addresses.num_elements - DIRECT_BLOCK_NUM;
@@ -84,15 +94,8 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 			inode->data.direct[i] = *(BlockSequence*)current->element;
 		}
 		else {
-			// TODO move to function
 			BlockSequence* seq = current->element;
-			const int current_location = (i - DIRECT_BLOCK_NUM) * ADDRESS_SIZE;
-
-			ret = util_write_uint32(&serialized_address, current_location, seq->start_addr);
-			if (ret != SUCCESS) return ret;
-
-			ret = util_write_uint32(&serialized_address, current_location + 4, seq->length);
-			if (ret != SUCCESS) return ret;
+			_stream_write_seq_to_heap(*seq, &serialized_address, (i - DIRECT_BLOCK_NUM) * ADDRESS_SIZE);
 		}
 
 		current = current->next;
