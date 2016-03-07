@@ -49,7 +49,7 @@ Disk create_fragmented_disk() {
 		}
 	}
 
-	//mem_free(full_block);
+	mem_free(full_block);
 
 	return disk;
 }
@@ -66,11 +66,14 @@ static char* test_file_disk_addressssing() {
 	for (int i = 0; i < addresses->num_elements; i++) {
 		BlockSequence* seq = current->element;
 
+		mu_assert("[MinUnit][TEST] file disk addressing: incorrect start address", 2 * i + 1 == seq->start_addr);
+		mu_assert("[MinUnit][TEST] file disk addressing: incorrect length", 1 == seq->length);
+
 		current = current->next;
 	}
 
-	//llist_free(addresses);
-	//mem_free(disk.data_bitmap);
+	llist_free(addresses);
+	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 	return 0;
 }
