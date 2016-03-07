@@ -13,10 +13,72 @@
 
 int tests_run = 0;
 
+Disk create_fragmented_disk() {
+	const int size = MEGA * 300;
+	Disk disk = { 0 };
+	Superblock sb = { 0 };
+	Bitmap data_bt = { 0 };
+	disk.superblock = sb;
+	disk.data_bitmap = data_bt;
+	disk.size = size;
+
+	fs_create_superblock(&disk.superblock, size);
+	//*** [A]disk_mount(&disk);
+	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size);
+
+	HeapData full_block = { 0 };
+	mem_alloc(&full_block, BLOCK_SIZE);
+	memset(full_block.data, 0xFF, full_block.size);
+
+	int ret = 0;
+
+	for (int i = 0; i < disk.superblock.num_data_blocks; i++) {
+		if (i % 2 == 0) {
+			ret = bitmap_write(&disk.data_bitmap, i, 1);
+			if (ret != SUCCESS) {
+				printf("Failed to write to bitmap at %i error code %i\n", i, ret);
+				return disk;
+			}
+
+			// Uncomment to re-create disk AS WELL AS [A]
+			/*ret = disk_write(&disk, BLOCK_SIZE * (disk.superblock.data_blocks_start_addr + i), full_block);
+			if (ret != SUCCESS) { 
+				printf("Failed to write to disk at %i error code %i\n", i, ret);
+				return disk;
+			} */
+		}
+	}
+
+	//mem_free(full_block);
+
+	return disk;
+}
+
+static char* test_file_disk_addressssing() {
+	Disk disk = create_fragmented_disk();
+	disk.file = fopen("fragmented.bin", "wb+");
+
+	const int allocation_size = 266886;
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+
+	LListNode* current = addresses->head;
+	for (int i = 0; i < addresses->num_elements; i++) {
+		BlockSequence* seq = current->element;
+
+		current = current->next;
+	}
+
+	//llist_free(addresses);
+	//mem_free(disk.data_bitmap);
+	fclose(disk.file);
+	return 0;
+}
 static char* test_disk_io() {
 	Disk disk = { 0 };
-	disk_mount(&disk);
+	disk.size = DISK_SIZE;
 
+	disk_mount(&disk);
 
 	HeapData data_1 = { 0 };
 	HeapData data_2 = { 0 };
@@ -70,6 +132,7 @@ static char* test_disk_io() {
 
 static char* test_disk_io_2() {
 	Disk disk = { 0 };
+	disk.size = DISK_SIZE;
 	disk_mount(&disk);
 	HeapData data = {0};
 	mem_alloc(&data, 10);
@@ -109,6 +172,8 @@ static char* test_write_data_to_disk() {
 	BlockSequence* seq5 = malloc(sizeof(BlockSequence));
 	BlockSequence* seq6 = malloc(sizeof(BlockSequence));
 
+	// Remember that seq.length refers the to block num, not byte. 
+
 	seq1->start_addr = 5;
 	seq1->length = 20;
 
@@ -138,7 +203,7 @@ static char* test_write_data_to_disk() {
 	mem_alloc(&data, 50);
 	
 	HeapData disk_data = { 0 };
-	mem_alloc(&disk_data, 512);
+	mem_alloc(&disk_data, 512 * BLOCK_SIZE);
 
 	Disk disk = { 0 };
 	disk.data = disk_data;
@@ -156,6 +221,7 @@ static char* test_write_data_to_disk() {
 	}
 
 	fs_write_data_to_disk(&disk, data, *list);
+	mem_dump(disk.data, "dump2.bin");
 	mem_free(data);
 	mem_free(disk_data);
 	llist_free(list);
@@ -169,8 +235,7 @@ static char* test_alloc_blocks_continuous() {
 	fs_create_superblock(&superblock, DISK_SIZE);
 	Bitmap block_bitmap = {0};
 	mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
-	printf("%i\n bytes", superblock.num_data_blocks * BLOCK_SIZE);
-	int max = 16384;
+	int max = 128;
 	for (int i = 0; i < 8 * max; i++) {
 		if (rand() % 2 == 0) {
 			bitmap_write(&block_bitmap, i, 1);
@@ -180,6 +245,7 @@ static char* test_alloc_blocks_continuous() {
 	mem_write(&block_bitmap, max, 0xFF);
 	mem_write(&block_bitmap, max + 10, 0xFF);
 	mem_write(&block_bitmap, max + 63 + 64, 0xFF);
+	mem_dump(block_bitmap, "continuoustest.bin");
 	Disk disk = {0};
 	disk.superblock = superblock;
 	disk.data_bitmap = block_bitmap;
@@ -187,7 +253,7 @@ static char* test_alloc_blocks_continuous() {
 	int ret = fs_allocate_blocks(&disk, 128 * 8, &addresses);
 	
 	BlockSequence* node = addresses->head->element;
-	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", node->start_addr == 132096);
+	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", node->start_addr == 256 * 8);
 
 	llist_free(addresses);	
 	mem_free(block_bitmap);
@@ -198,7 +264,7 @@ static char* test_alloc_blocks_non_continuous() {
 	Superblock superblock;
 	fs_create_superblock(&superblock, DISK_SIZE);
 	Bitmap block_bitmap = {0};
-	mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
+	int ret = mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
 	const int start_byte = 50300; // In filler after 10x1024
 
 	// Create filler blocks [blue]
@@ -224,7 +290,7 @@ static char* test_alloc_blocks_non_continuous() {
 
 	// Write fillers at correct locations in bitmap
 	int current_location = 0;
-	int ret = 0;
+	ret = 0;
 	for (int i = 0; i < 10; i++) {
 		ret += mem_write_section(&block_bitmap, current_location, filler_4000);
 		current_location += 4000 + 1024;
@@ -300,12 +366,6 @@ static char* test_alloc_blocks_non_continuous() {
 		current = current->next;
 	}
 
-	// TODO the following tests need to be moved to their own function
-	Inode inode = { 0 };
-	ret = mem_alloc(&disk.data, superblock.num_blocks * BLOCK_SIZE);
-	disk.superblock.data_bitmap_circular_loc = 0;
-	ret = stream_write_addresses(&disk, &inode, *addresses);
-
 	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	mem_free(filler_10000);
@@ -314,7 +374,6 @@ static char* test_alloc_blocks_non_continuous() {
 	mem_free(filler_5000);
 	mem_free(filler_6000);
 
-	mem_free(disk.data);
 
 	return 0;
 }
@@ -627,10 +686,10 @@ static char* test_superblock_calculations() {
 	mu_assert("[MinUnit][FAIL] superblock calculation: inode bitmap size incorrect", superblock.inode_bitmap_size == 512);
 	mu_assert("[MinUnit][FAIL] superblock calculation: inode table size incorrect", superblock.inode_table_size == 64 * 1024);
 	mu_assert("[MinUnit][FAIL] superblock calculation: num data blocks incorrect", superblock.num_data_blocks == 7167);
-	mu_assert("[MinUnit][FAIL] superblock calculation: data block bitmap size incorrect", superblock.data_block_bitmap_size == 458240);
+	mu_assert("[MinUnit][FAIL] superblock calculation: data block bitmap size incorrect", superblock.data_block_bitmap_size == 1024);
 	mu_assert("[MinUnit][FAIL] superblock calculation: inode table start address incorrect", superblock.inode_table_start_addr == 2);
 	mu_assert("[MinUnit][FAIL] superblock calculation: data block bitmap addr incorrect", superblock.data_block_bitmap_addr == 130);
-	mu_assert("[MinUnit][FAIL] superblock calculation: data block start addr incorrect", superblock.data_blocks_start_addr == 1025);
+	mu_assert("[MinUnit][FAIL] superblock calculation: data block start addr incorrect", superblock.data_blocks_start_addr == 132);
 
 	return 0;
 }
@@ -700,11 +759,11 @@ static char* all_tests() {
 	mu_run_test(test_find_next_bitmap_block);
 	mu_run_test(test_alloc_blocks_continuous);
 	mu_run_test(test_find_continuous_bitmap_run_2);
-	mu_run_test(test_alloc_blocks_non_continuous);
+	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 	mu_run_test(test_write_data_to_disk);
 	mu_run_test(test_disk_io);
 	mu_run_test(test_disk_io_2);
-
+	mu_run_test(test_file_disk_addressssing);
 	return 0;
 }
 

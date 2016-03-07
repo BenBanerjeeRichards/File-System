@@ -10,6 +10,7 @@
 #include "stream.h"
 #include "../../core/src/llist.h"
 
+
 int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	// Ensure that the superblock is initialised before passing to this func.
 	superblock->magic_1 = SUPERBLOCK_MAGIC_1;
@@ -36,7 +37,8 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	// blocks_remaining is all of the blocks which have not been reserved up to this point
 	int blocks_remaining = superblock->num_blocks - superblock->data_block_bitmap_addr;
 	superblock->num_data_blocks = ceil((8.0/9.0) * blocks_remaining);
-	superblock->data_block_bitmap_size = (blocks_remaining - superblock->num_data_blocks) * superblock->block_size;
+	//superblock->data_block_bitmap_size = (blocks_remaining - superblock->num_data_blocks) * superblock->block_size;
+	superblock->data_block_bitmap_size = round_up_nearest_multiple(superblock->num_data_blocks / 8, superblock->block_size);
 
 	superblock->data_blocks_start_addr = superblock->data_block_bitmap_addr + (superblock->data_block_bitmap_size / superblock->block_size);
 
@@ -119,19 +121,30 @@ int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 	// Where to start searching from, updated and wrapped around disk
 	int current_byte = disk->superblock.data_bitmap_circular_loc;
 
-	while (allocated_bytes < num_blocks) {
+	// Create a copy of the bitmap to write to 
+	// The actual bitmap is not actually written to - handled elsewhere
+	Bitmap bitmap_copy = { 0 };
+	mem_alloc(&bitmap_copy, disk->data_bitmap.size);
+	memcpy(bitmap_copy.data, disk->data_bitmap.data, disk->data_bitmap.size);
+
+	while (allocated_bytes < num_blocks * BLOCK_SIZE) {
 		int run_start_bit = 0;
 		int length = 0;
 		// Look for size of 1 then find total size
 		// Doesn't work well for small allocations FIXME
-		int r = bitmap_find_continuous_block_run(disk->data_bitmap, 1, current_byte,
+		int r = bitmap_find_continuous_block_run(bitmap_copy, 1, current_byte,
 			&run_start_bit);
 
 		if (r != SUCCESS) return r;
 
-		r = bitmap_find_continuous_run_length(disk->data_bitmap, run_start_bit, &length);
-		current_byte = (run_start_bit / 8) + 2 + (length / 8);
-		allocated_bytes += length / 8;
+		r = bitmap_find_continuous_run_length(bitmap_copy, run_start_bit, &length);
+		current_byte = run_start_bit / 8 + length / 8;
+		allocated_bytes += length * BLOCK_SIZE;
+
+		// Write to the copied bitmap
+		for (int i = 0; i < length; i++) {
+			bitmap_write(&bitmap_copy, i + run_start_bit, 1);
+		}
 
 		// Add allocation to LL
 		BlockSequence* seq = malloc(sizeof(BlockSequence));
@@ -141,6 +154,8 @@ int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 
 		disk->superblock.data_bitmap_circular_loc = run_start_bit / 8;
 	}
+
+	mem_free(bitmap_copy);
 
 	return SUCCESS;
 }
@@ -185,8 +200,7 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses) {
 	while (bytes_written < data.size && current != NULL) {
 		if (current == NULL) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
 		BlockSequence* seq = current->element;
-		
-		memcpy(&disk->data.data[seq->start_addr], &data.data[bytes_written], seq->length);
+		memcpy(&disk->data.data[seq->start_addr * BLOCK_SIZE], &data.data[bytes_written], seq->length);
 		bytes_written += seq->length;
 
 		current = current->next;

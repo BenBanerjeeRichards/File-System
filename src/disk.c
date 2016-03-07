@@ -6,16 +6,16 @@
 #include "bitmap.h"
 #include "memory.h"
 
+#include <time.h>
+
 int disk_mount(Disk* disk) {
 	// During testing
 	remove(FILESYSTEM_FILE_NAME);
 
-	// ab+ - open for reading and writing, create file if needed
 	disk->file = fopen(FILESYSTEM_FILE_NAME, "wb+");
-
 	HeapData data = { 0 };
 	// This also memsets all data to 0
-	mem_alloc(&data, DISK_SIZE);
+	mem_alloc(&data, disk->size);
 
 	int ret = disk_write(disk, 0, data);
 	mem_free(data);
@@ -33,14 +33,13 @@ int disk_write(Disk* disk, int location, HeapData data) {
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
 	if (disk->file == NULL) return ERR_INVALID_FILE_OPERATION;
 	if (location < 0) return ERR_INVALID_FILE_OPERATION;
-	if (data.size > DISK_SIZE - location) return ERR_DATA_TOO_LARGE;
+	if (data.size > disk->size - location) return ERR_DATA_TOO_LARGE;
 
 	int ret = fseek(disk->file, location, SEEK_SET);
 	if (ret == -1) return ERR_INVALID_FILE_OPERATION;
 
 	ret = fwrite(data.data, sizeof(uint8_t), data.size, disk->file);
 	if (ret == -1) return ERR_INVALID_FILE_OPERATION;
-
 	if (ret != data.size) return ERR_PARTIAL_FILE_WRITE;
 	return SUCCESS;
 }
@@ -59,7 +58,7 @@ HeapData disk_read(Disk disk, int location, int size, int* error) {
 		*error = ERR_INVALID_FILE_OPERATION;
 		return data_read;
 	}
-	if (size + location > DISK_SIZE) {
+	if (size + location > disk.size) {
 		*error = ERR_DATA_TOO_LARGE;
 		return data_read;
 	}
@@ -93,19 +92,19 @@ int disk_write_offset(Disk* disk, int location, int offset, HeapData data) {
 	// i.e. starts write at location + offset.
 	// Will wrap data to start of offset if needed
 
-	if (location < 0 || location > DISK_SIZE) return ERR_INVALID_FILE_OPERATION;
-	if (offset < 0 || offset > DISK_SIZE) return ERR_INVALID_FILE_OPERATION;
+	if (location < 0 || location > disk->size) return ERR_INVALID_FILE_OPERATION;
+	if (offset < 0 || offset > disk->size) return ERR_INVALID_FILE_OPERATION;
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
 	if (data.size <= 0) return ERR_INVALID_MEMORY_ACCESS;
 
 	int ret = 0;
 	int start_write_loc = offset + location;
 	
-	if (start_write_loc + data.size > DISK_SIZE) {
+	if (start_write_loc + data.size > disk->size) {
 		// Create data subsets
 		// data_1: From start_write_loc to end of the file
 		// data_2: From beginning of file to data.size - data_1_size
-		int data_1_size = DISK_SIZE - start_write_loc;
+		int data_1_size = disk->size - start_write_loc;
 		int data_2_size = data.size - data_1_size;
 
 		// Write to the end of the file (data 1)
@@ -137,12 +136,12 @@ int disk_write_offset(Disk* disk, int location, int offset, HeapData data) {
 
 HeapData disk_read_offset(Disk disk, int location, int offset, int size, int* error){
 	HeapData read_data = { 0 };
-	if (location < 0 || location > DISK_SIZE) {
+	if (location < 0 || location > disk.size) {
 		*error = ERR_INVALID_FILE_OPERATION;
 		return read_data;
 	}
 
-	if (offset < 0 || offset > DISK_SIZE) {
+	if (offset < 0 || offset > disk.size) {
 		*error = ERR_INVALID_FILE_OPERATION;
 		return read_data;
 	}
@@ -152,7 +151,7 @@ HeapData disk_read_offset(Disk disk, int location, int offset, int size, int* er
 		return read_data;
 	}
 
-	if (size < 0 || size > DISK_SIZE) {
+	if (size < 0 || size > disk.size) {
 		*error = ERR_INVALID_FILE_OPERATION;
 		return read_data;
 	}
@@ -160,8 +159,8 @@ HeapData disk_read_offset(Disk disk, int location, int offset, int size, int* er
 	int ret = 0;
 	int start_read_loc = offset + location;
 
-	if (start_read_loc + size > DISK_SIZE) {
-		int read_1_size = DISK_SIZE - start_read_loc;
+	if (start_read_loc + size > disk.size) {
+		int read_1_size = disk.size - start_read_loc;
 		int read_2_size = size - read_1_size;
 
 		HeapData read_1 = disk_read(disk, start_read_loc, read_1_size, &ret);

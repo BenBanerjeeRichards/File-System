@@ -132,8 +132,12 @@ typedef struct {
 
 	// For using a file
 	FILE* file;
-
+	int size;
 } Disk;
+
+typedef struct {
+	uint64_t addr;
+} BlockAddress;
 
 
 int fs_create_superblock(Superblock*, uint64_t);

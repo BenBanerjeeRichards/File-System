@@ -7,7 +7,6 @@
 #include "fs.h"
 #include "bitmap.h"
 
-
 int disk_mount(Disk*);
 int disk_unmount(Disk);
 int disk_write(Disk*, int, HeapData);
