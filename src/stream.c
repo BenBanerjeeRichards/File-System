@@ -71,11 +71,24 @@ int _stream_write_seq_to_heap(BlockSequence seq, HeapData* data, int location) {
 
 	return SUCCESS;
 }
+int stream_write_addresses_to_heap(LList addresses, HeapData* data) {
+	LListNode* current = addresses.head;
+	int ret = 0;
+
+	for (int i = 0; i < addresses.num_elements; i++) {
+		BlockSequence* seq = current->element;
+		ret = _stream_write_seq_to_heap(*seq, data, i * BLOCK_SEQ_SIZE);
+		if (ret != SUCCESS) return ret;
+		current = current->next;
+	}
+
+	return SUCCESS;
+}
 
 int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	// Firstly calculate data that needs to be alloc'd for storing non-directs
 	const int num_non_directs = addresses.num_elements < DIRECT_BLOCK_NUM ? 0 : addresses.num_elements - DIRECT_BLOCK_NUM;
-	const int addresses_per_block = BLOCK_SIZE / ADDRESS_SIZE;
+	const int addresses_per_block = BLOCK_SIZE / BLOCK_SEQ_SIZE;
 	const int num_non_direct_blocks = ceil((double)num_non_directs / (double)addresses_per_block);
 
 	// Allocate non direct blocks
