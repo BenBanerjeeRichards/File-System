@@ -38,9 +38,9 @@ typedef struct {
 
 typedef struct {
 	BlockSequence direct[6];
-	uint32_t indirect;
-	uint32_t double_indirect;
-	uint32_t triple_indirect;
+	BlockSequence indirect;
+	BlockSequence double_indirect;
+	BlockSequence triple_indirect;
 } DataStream;	
 
 typedef struct {
