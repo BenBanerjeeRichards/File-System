@@ -27,8 +27,9 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 
 	uint32_t inode_bitmap_size = (uint32_t) ceil(superblock->num_inodes / 8);
 
-	// Fit the bitmaps into full blocks
-	superblock->inode_bitmap_size = round_up_nearest_multiple(superblock->num_inodes / 8, superblock->block_size);
+	// Fit the bitmaps into full 
+	superblock->inode_bitmap_size_bytes = superblock->num_inodes / 8;
+	superblock->inode_bitmap_size = round_up_nearest_multiple(superblock->inode_bitmap_size_bytes, superblock->block_size);
 
 	superblock->inode_table_size = round_up_nearest_multiple(superblock->num_inodes * superblock->inode_size, superblock->block_size);
 	superblock->inode_table_start_addr = 1 + (superblock->inode_bitmap_size / superblock->block_size);
@@ -38,8 +39,8 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 	int blocks_remaining = superblock->num_blocks - superblock->data_block_bitmap_addr;
 	superblock->num_data_blocks = ceil((8.0/9.0) * blocks_remaining);
 	//superblock->data_block_bitmap_size = (blocks_remaining - superblock->num_data_blocks) * superblock->block_size;
-	superblock->data_block_bitmap_size = round_up_nearest_multiple(superblock->num_data_blocks / 8, superblock->block_size);
-
+	superblock->data_block_bitmap_size_bytes = superblock->num_data_blocks / 8;
+	superblock->data_block_bitmap_size = round_up_nearest_multiple(superblock->data_block_bitmap_size_bytes, superblock->block_size);
 	superblock->data_blocks_start_addr = superblock->data_block_bitmap_addr + (superblock->data_block_bitmap_size / superblock->block_size);
 
 	superblock->data_bitmap_circular_loc = 0;

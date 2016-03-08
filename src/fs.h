@@ -66,6 +66,8 @@ typedef struct {
 	uint32_t inode_bitmap_size;
 	uint32_t inode_table_size;
 	uint32_t data_block_bitmap_size;
+	uint32_t data_block_bitmap_size_bytes;
+	uint32_t inode_bitmap_size_bytes;
 
 	uint32_t inode_table_start_addr;
 	uint32_t data_block_bitmap_addr;
