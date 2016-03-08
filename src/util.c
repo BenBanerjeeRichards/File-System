@@ -85,7 +85,7 @@ int compare_superblock(Superblock s1, Superblock s2){
 
 int compare_inode(Inode i1, Inode i2) {
 	int comparison = 0;
-
+	/*
 	comparison +=  (i1.magic == i2.magic);
 	comparison +=  (i1.inode_number == i2.inode_number);
 	comparison +=  (i1.uid == i2.uid);
@@ -99,7 +99,7 @@ int compare_inode(Inode i1, Inode i2) {
 	comparison +=  (i1.data.indirect == i2.data.indirect);
 	comparison +=  (i1.data.double_indirect == i2.data.double_indirect);
 	comparison +=  (i1.data.triple_indirect == i2.data.triple_indirect);
-
+	*/
 	for (int i = 0; i < DIRECT_BLOCK_NUM; i++){
 		comparison += (i1.data.direct[i].start_addr == i2.data.direct[i].start_addr);
 		comparison += (i1.data.direct[i].length == i2.data.direct[i].length);

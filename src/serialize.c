@@ -169,6 +169,7 @@ int unserialize_superblock(HeapData* data, Superblock* superblock){
 	return SUCCESS;
 }
 
+/*
 int serialize_inode(HeapData* data, Inode inode) {
 	int error = 0;
 	int location_count = 0;
@@ -302,3 +303,4 @@ int unserialize_inode(HeapData* data, Inode* inode) {
 
 	return SUCCESS;
 }
+*/
