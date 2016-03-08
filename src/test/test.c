@@ -24,7 +24,7 @@ Disk create_fragmented_disk() {
 
 	fs_create_superblock(&disk.superblock, size);
 	//*** [A]disk_mount(&disk);
-	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size);
+	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes);
 
 	HeapData full_block = { 0 };
 	mem_alloc(&full_block, BLOCK_SIZE);
