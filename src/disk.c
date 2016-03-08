@@ -9,7 +9,7 @@
 #include <time.h>
 
 int disk_mount(Disk* disk) {
-	// During testing
+	// During testing the entire disk is re-written
 	remove(FILESYSTEM_FILE_NAME);
 
 	disk->file = fopen(FILESYSTEM_FILE_NAME, "wb+");
