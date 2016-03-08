@@ -27,7 +27,7 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 
 	uint32_t inode_bitmap_size = (uint32_t) ceil(superblock->num_inodes / 8);
 
-	// Fit the bitmaps into full 
+	// Fit the bitmaps into full blocks
 	superblock->inode_bitmap_size_bytes = superblock->num_inodes / 8;
 	superblock->inode_bitmap_size = round_up_nearest_multiple(superblock->inode_bitmap_size_bytes, superblock->block_size);
 
