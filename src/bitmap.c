@@ -37,6 +37,17 @@ int bitmap_read(Bitmap bitmap, int bit_address, int* error)
 	return (byte >> (7-bit)) & 1;
 }
 
+int bitmap_write_range(Bitmap bitmap, int bit_address_start, int length, int value) {
+	int ret = 0;
+
+	for (int i = 0; i < length; i++) {
+		ret = bitmap_write(&bitmap, bit_address_start + i, value);
+		if (ret != SUCCESS) return ret;
+	}
+
+	return SUCCESS;
+}
+
 int bitmap_find_continuous_block_run(Bitmap bitmap, int length, int start_byte, int* run_start_bit) {
 	if (!bitmap.valid) return ERR_INVALID_BITMAP;	
 	int current_bit_count = 0;
