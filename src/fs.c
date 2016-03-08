@@ -122,23 +122,29 @@ int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 	// Where to start searching from, updated and wrapped around disk
 	int current_byte = disk->superblock.data_bitmap_circular_loc;
 
+	// Create a copy of the bitmap to write to 
+	// The actual bitmap is not actually written to - handled elsewhere
+	Bitmap bitmap_copy = { 0 };
+	mem_alloc(&bitmap_copy, disk->data_bitmap.size);
+	memcpy(bitmap_copy.data, disk->data_bitmap.data, disk->data_bitmap.size);
+
 	while (allocated_bytes < num_blocks * BLOCK_SIZE) {
 		int run_start_bit = 0;
 		int length = 0;
-
 		// Look for size of 1 then find total size
-		int r = bitmap_find_continuous_block_run(disk->data_bitmap, 1, current_byte,
+		// Doesn't work well for small allocations FIXME
+		int r = bitmap_find_continuous_block_run(bitmap_copy, 1, current_byte,
 			&run_start_bit);
 
 		if (r != SUCCESS) return r;
 
-		r = bitmap_find_continuous_run_length(disk->data_bitmap, run_start_bit, &length);
+		r = bitmap_find_continuous_run_length(bitmap_copy, run_start_bit, &length);
 		current_byte = run_start_bit / 8 + length / 8;
 		allocated_bytes += length * BLOCK_SIZE;
 
 		// Write to the copied bitmap
 		for (int i = 0; i < length; i++) {
-			bitmap_write(&disk->data_bitmap, i + run_start_bit, 1);
+			bitmap_write(&bitmap_copy, i + run_start_bit, 1);
 		}
 
 		// Add allocation to LL
@@ -149,6 +155,8 @@ int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 
 		disk->superblock.data_bitmap_circular_loc = run_start_bit / 8;
 	}
+
+	mem_free(bitmap_copy);
 
 	return SUCCESS;
 }
@@ -172,9 +180,7 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 			seq->length = num_blocks;
 			seq->start_addr = start_bit;
 			llist_insert(*addresses, seq);
-
 			sb->data_bitmap_circular_loc = start_bit / 8;
-			bitmap_write_range(disk->data_bitmap, start_bit, num_blocks, 1);
 		}
 
 	}
