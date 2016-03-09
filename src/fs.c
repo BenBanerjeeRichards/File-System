@@ -187,21 +187,30 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 }
 
 int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses) {
-	return SUCCESS;	// This function needs to write to the file
-	if (!disk->data.valid) return ERR_INVALID_MEMORY_ACCESS;
+	if (disk->file == NULL) return ERR_INVALID_FILE_OPERATION;
+	if (addresses.num_elements == 0) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
 
-	int bytes_written = 0;
+	int ret = 0;
+	int blocks_written = 0;
 	LListNode* current = addresses.head;
-	while (bytes_written < data.size && current != NULL) {
-		if (current == NULL) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
+	for (int i = 0; i < addresses.num_elements; i++) {
 		BlockSequence* seq = current->element;
-		memcpy(&disk->data.data[seq->start_addr * BLOCK_SIZE], &data.data[bytes_written], seq->length);
-		bytes_written += seq->length;
 
+		HeapData section = { 0 };
+		ret = mem_alloc(&section, seq->length * BLOCK_SIZE);
+		if (ret != SUCCESS) return ret;
+
+		memcpy(section.data, &data.data[blocks_written * BLOCK_SIZE], BLOCK_SIZE * seq->length);
+
+		ret = disk_write(disk, seq->start_addr * BLOCK_SIZE, section);
+		if (ret != SUCCESS) return ret;
+
+
+		blocks_written += seq->length;
+		mem_free(section);
 		current = current->next;
 	}
-
 
 	return SUCCESS;
 }

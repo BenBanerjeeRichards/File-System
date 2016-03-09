@@ -55,6 +55,64 @@ Disk create_fragmented_disk() {
 	return disk;
 }
 
+static char* test_write_data_to_disk_2() {
+	const char* fname = "test_write_to_disk.bin";
+	const int size_1 = 2;
+	const int size_2 = 5;
+	const int size_3 = 3;
+
+	Disk disk = { 0 };
+	disk.size = 128 * BLOCK_SIZE;
+	disk_mount(&disk, fname);
+
+	LList* addresses = llist_new();
+	addresses->free_element = &free_element_standard;
+
+	BlockSequence* seq1 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq2 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq3 = malloc(sizeof(BlockSequence));
+
+	seq1->start_addr = 1;
+	seq1->length = 2;
+
+	seq2->start_addr = 5;
+	seq2->length = 5;
+
+	seq3->start_addr = 12;
+	seq3->length = 3;
+
+	llist_insert(addresses, seq1);
+	llist_insert(addresses, seq2);
+	llist_insert(addresses, seq3);
+
+	HeapData data = { 0 };
+
+	mem_alloc(&data, BLOCK_SIZE * (size_1 + size_2 + size_3));
+
+	memset(&data.data[0], 0xAA, BLOCK_SIZE * size_1);
+	memset(&data.data[BLOCK_SIZE * size_1], 0xBB, BLOCK_SIZE * size_2);
+	memset(&data.data[BLOCK_SIZE * (size_2 + size_1)], 0xCC, BLOCK_SIZE * size_3);
+
+	fs_write_data_to_disk(&disk, data, *addresses);
+	int ret = 0;
+	HeapData data_1 = disk_read(disk, seq1->start_addr * BLOCK_SIZE, seq1->length * BLOCK_SIZE, &ret);
+	HeapData data_2 = disk_read(disk, seq2->start_addr * BLOCK_SIZE, seq2->length * BLOCK_SIZE, &ret);
+	HeapData data_3 = disk_read(disk, seq3->start_addr * BLOCK_SIZE, seq3->length * BLOCK_SIZE, &ret);
+
+	int cmp = 0;
+	cmp += memcmp(&data.data[0], data_1.data, seq1->length * BLOCK_SIZE);
+	cmp += memcmp(&data.data[BLOCK_SIZE * size_1], data_2.data, seq2->length * BLOCK_SIZE);
+	cmp += memcmp(&data.data[BLOCK_SIZE * (size_2 + size_1)], data_3.data, seq3->length * BLOCK_SIZE);
+
+	mu_assert("[MinUnit][TEST] write data to disk: comparison failed", cmp == 0);
+
+	mem_free(data);
+	llist_free(addresses);
+
+	remove(fname);
+	return 0;
+}
+
 static char* test_file_disk_addressssing() {
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
@@ -754,6 +812,8 @@ static char* test_bitmap_io() {
 }
 
 static char* all_tests() {
+	mu_run_test(test_write_data_to_disk_2);
+
 	mu_run_test(test_superblock_serialization);
 	mu_run_test(test_superblock_calculations);
 	mu_run_test(test_bitmap_io);
