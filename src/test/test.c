@@ -58,7 +58,6 @@ Disk create_fragmented_disk() {
 static char* test_file_disk_addressssing() {
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
-	printf("%i\n", disk.superblock.num_data_blocks);
 	const int allocation_size = 266886;
 	LList* addresses;
 	fs_allocate_blocks(&disk, allocation_size, &addresses);

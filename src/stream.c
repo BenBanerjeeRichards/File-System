@@ -26,103 +26,87 @@ int stream_write_addresses_to_heap(LList addresses, HeapData* data) {
 	return SUCCESS;
 }
 
+int _stream_write_address_level(Disk disk, BlockSequence* inode_data, LList addresses, LList** next_addresses, HeapData* next_data) {
+	// Alloc memory for serialized addresses
+	int ret = mem_alloc(next_data, addresses.num_elements * BLOCK_SEQ_SIZE);
+	if (ret != SUCCESS) return ret;
+
+	// Serialize addresses
+	LListNode* current = addresses.head;
+	for (int i = 0; i < addresses.num_elements; i++) {
+		BlockSequence* seq = current->element;
+		_stream_write_seq_to_heap(*seq, next_data, i * BLOCK_SEQ_SIZE);
+		current = current->next;
+	}
+
+	// Allocate blocks for the serialized data
+	ret = fs_allocate_blocks(&disk, next_data->size / BLOCK_SIZE, next_addresses);
+	if (ret != SUCCESS) return ret;
+
+	// Set inode information
+	if ((*next_addresses)->num_elements > 0) {
+		BlockSequence* seq = (*next_addresses)->head->element;
+		*inode_data = *seq;
+	}
+
+	return SUCCESS;
+}
+
 int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	int ret = SUCCESS;
-	// Split up into direct and indirects 
-	LList* indirect_addresses = llist_create_sublist(addresses, DIRECT_BLOCK_NUM, &ret);
 
 	// Write directs to the inode
 	LListNode* current = addresses.head;
 	int num_directs = addresses.num_elements < 6 ? addresses.num_elements : 6;
+
 	for (int i = 0; i < num_directs; i++) {
 		BlockSequence* seq = current->element;
 		inode->data.direct[i] = *seq;
 		current = current->next;
 	}
 
+	// Split up into direct and indirects 
+	LList* indirect_addresses = llist_create_sublist(addresses, DIRECT_BLOCK_NUM, &ret);
 	if (indirect_addresses->num_elements == 0) {
-		/** DONE **/
+		return SUCCESS;
 	}
 
 	HeapData indirect_data = { 0 };
-	ret = mem_alloc(&indirect_data, indirect_addresses->num_elements * BLOCK_SEQ_SIZE);
+	HeapData double_indirect_data = { 0 };
+	HeapData triple_indirect_data = { 0 };
+
+	LList* double_indirect_addresses;
+	LList* indirect_data_addresses;
+	LList* triple_indirect_addresses;
+
+
+	_stream_write_address_level(*disk, &inode->data.indirect, *indirect_addresses, &indirect_data_addresses, &indirect_data);
+	ret = fs_write_data_to_disk(disk, indirect_data, *indirect_data_addresses);
 	if (ret != SUCCESS) return ret;
-
-	// Writing block sequences to indirects
-	current = indirect_addresses->head;
-	for (int i = 0; i < indirect_addresses->num_elements; i++) {
-		BlockSequence* seq = current->element;
-		_stream_write_seq_to_heap(*seq, &indirect_data, i * BLOCK_SEQ_SIZE);
-		current = current->next;
-	}
-
-	// Find addresses to store indirects
-	LList* indirect_data_addresses = { 0 };
-	ret = fs_allocate_blocks(disk, indirect_data.size / BLOCK_SIZE, &indirect_data_addresses);
-	if (ret != SUCCESS) return ret;
-	
-	// Store a single indirect in the inode (i.e. 64 Block Sequences)
-	if (indirect_data_addresses->num_elements == 0) {
-		/** DONE **/
-	}
-
-	BlockSequence* indode_indirect = indirect_data_addresses->head->element;
-	inode->data.indirect = *indode_indirect;
 
 	LList* remaining_indirects = llist_create_sublist(*indirect_data_addresses, 1, &ret);
 	if (ret != SUCCESS) return ret;
 
 	if (remaining_indirects->num_elements == 0) {
-		/** DONE **/
+		return SUCCESS;
 	}
 
-	// Write to double indirect data
-	HeapData double_indirect_data = { 0 };
-	mem_alloc(&double_indirect_data, remaining_indirects->num_elements * BLOCK_SEQ_SIZE);
-	
-	current = remaining_indirects->head;
-	for (int i = 0; i < remaining_indirects->num_elements; i++) {
-		BlockSequence* seq = current->element;
-		_stream_write_seq_to_heap(*seq, &double_indirect_data, i * BLOCK_SEQ_SIZE);
-		current = current->next;
-	}
 
-	LList* double_indirect_addresses;
-	ret = fs_allocate_blocks(disk, double_indirect_data.size / BLOCK_SIZE, &double_indirect_addresses);
+	_stream_write_address_level(*disk, &inode->data.double_indirect, *remaining_indirects, &double_indirect_addresses, &double_indirect_data);
+	ret = fs_write_data_to_disk(disk, double_indirect_data, *double_indirect_addresses);
 	if (ret != SUCCESS) return ret;
-
-	// Write an d-indirect to the inode
-	if (double_indirect_addresses->num_elements > 0) {
-		BlockSequence* inode_double_indirect = double_indirect_addresses->head->element;
-		inode->data.double_indirect = *inode_double_indirect;
-	}
 
 	LList* remaining_double_indirects = llist_create_sublist(*double_indirect_addresses, 1, &ret);
 	if (ret != SUCCESS) return ret;
 
 	if (remaining_double_indirects->num_elements == 0) {
-		/** DONE **/
+		return SUCCESS;
 	}
 
-	HeapData triple_indirect_data = { 0 };
-	mem_alloc(&triple_indirect_data, remaining_double_indirects->num_elements * BLOCK_SEQ_SIZE);
-
-	current = remaining_double_indirects->head;
-	for (int i = 0; i < remaining_double_indirects->num_elements; i++) {
-		BlockSequence* seq = current->element;
-		_stream_write_seq_to_heap(*seq, &triple_indirect_data, i * BLOCK_SEQ_SIZE);
-		current = current->next;
+	_stream_write_address_level(*disk, &inode->data.triple_indirect, *remaining_double_indirects, &triple_indirect_addresses, &triple_indirect_data);
+	if (triple_indirect_addresses->num_elements > 1) {
+		return ERR_DISK_FULL;
 	}
 
-	LList* triple_indirect_addresses;
-	ret = fs_allocate_blocks(disk, triple_indirect_data.size / BLOCK_SIZE, &triple_indirect_addresses);
-	if (ret != SUCCESS) return ret;
-
-	// Write an d-indirect to the inode
-	if (triple_indirect_addresses->num_elements > 0) {
-		BlockSequence* inode_triple_indirect = triple_indirect_addresses->head->element;
-		inode->data.triple_indirect = *inode_triple_indirect;
-	}
-
-	return SUCCESS;
+	return fs_write_data_to_disk(disk, triple_indirect_data, *triple_indirect_addresses);
 }
