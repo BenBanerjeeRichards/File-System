@@ -85,7 +85,7 @@ static char* test_disk_io() {
 	Disk disk = { 0 };
 	disk.size = DISK_SIZE;
 
-	disk_mount(&disk);
+	disk_mount(&disk, "filesystem2.bin");
 
 	HeapData data_1 = { 0 };
 	HeapData data_2 = { 0 };
@@ -140,7 +140,7 @@ static char* test_disk_io() {
 static char* test_disk_io_2() {
 	Disk disk = { 0 };
 	disk.size = DISK_SIZE;
-	disk_mount(&disk);
+	disk_mount(&disk, FILESYSTEM_FILE_NAME);
 	HeapData data = {0};
 	mem_alloc(&data, 10);
 

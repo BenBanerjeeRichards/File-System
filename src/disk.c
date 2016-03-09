@@ -8,11 +8,11 @@
 
 #include <time.h>
 
-int disk_mount(Disk* disk) {
+int disk_mount(Disk* disk, const char* name) {
 	// During testing the entire disk is re-written
-	remove(FILESYSTEM_FILE_NAME);
+	remove(name);
 
-	disk->file = fopen(FILESYSTEM_FILE_NAME, "wb+");
+	disk->file = fopen(name, "wb+");
 	HeapData data = { 0 };
 	// This also memsets all data to 0
 	mem_alloc(&data, disk->size);
