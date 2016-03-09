@@ -2,7 +2,6 @@
 *.o
 *.sh
 *.bin
-*.md
 *.html
 main
 doc/
