@@ -8,6 +8,14 @@
 #include "util.h"
 #include "constants.h"
 
+int div_round_up(int a, int b) {
+	int quot = a / b;
+	if (quot * b == a) {
+		return quot;
+	}
+	return quot + 1;
+}
+
 int util_path_next_dir_name(HeapData path, int start, HeapData* name) {
 	if (!path.valid) return ERR_INVALID_MEMORY_ACCESS;
 	if (start < 0 || start > path.size) return ERR_INVALID_MEMORY_ACCESS;

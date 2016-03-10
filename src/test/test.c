@@ -735,6 +735,13 @@ static char* test_superblock_serialization() {
 	return 0;
 }
 
+static char* test_div_round_up() {
+	mu_assert("[MinUnit][FAIL] div round up: incorrect", div_round_up(6, 3) == 2);
+	mu_assert("[MinUnit][FAIL] div round up: incorrect", div_round_up(6, 4) == 2);
+	mu_assert("[MinUnit][FAIL] div round up: incorrect", div_round_up(23, 5) == 5);
+	return 0;
+}
+
 static char* test_superblock_calculations() {
 	Superblock superblock = {0};
 	fs_create_superblock(&superblock, 4096 * 1024);
