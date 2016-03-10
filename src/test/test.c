@@ -13,6 +13,8 @@
 
 int tests_run = 0;
 
+
+
 Disk create_fragmented_disk() {
 	const int size = MEGA * 310;	// ** Needs new disk IMPORTANT 
 	Disk disk = { 0 };
@@ -23,7 +25,7 @@ Disk create_fragmented_disk() {
 	disk.size = size;
 
 	fs_create_superblock(&disk.superblock, size);
-	//*** [A]disk_mount(&disk);
+	//disk_mount(&disk, "fragmented.bin");
 	// TODO fix one off 
 	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes + 1);
 
@@ -42,11 +44,12 @@ Disk create_fragmented_disk() {
 			}
 
 			// Uncomment to re-create disk AS WELL AS [A]
-			/*ret = disk_write(&disk, BLOCK_SIZE * (disk.superblock.data_blocks_start_addr + i), full_block);
+			
+	/*		ret = disk_write(&disk, BLOCK_SIZE * (disk.superblock.data_blocks_start_addr + i), full_block);
 			if (ret != SUCCESS) { 
 				printf("Failed to write to disk at %i error code %i\n", i, ret);
 				return disk;
-			} */
+			}  */
 		}
 	}
 
@@ -161,7 +164,7 @@ static char* test_write_data_to_disk_2() {
 	memset(&data.data[BLOCK_SIZE * size_1], 0xBB, BLOCK_SIZE * size_2);
 	memset(&data.data[BLOCK_SIZE * (size_2 + size_1)], 0xCC, BLOCK_SIZE * size_3);
 
-	fs_write_data_to_disk(&disk, data, *addresses);
+	fs_write_data_to_disk(&disk, data, *addresses, 0);
 	int ret = 0;
 	HeapData data_1 = disk_read(disk, seq1->start_addr * BLOCK_SIZE, seq1->length * BLOCK_SIZE, &ret);
 	HeapData data_2 = disk_read(disk, seq2->start_addr * BLOCK_SIZE, seq2->length * BLOCK_SIZE, &ret);
@@ -176,15 +179,17 @@ static char* test_write_data_to_disk_2() {
 
 	mem_free(data);
 	llist_free(addresses);
-
-	remove(fname);
+	fclose(disk.file);
+	disk_remove(fname);
+	
 	return 0;
 }
 
 static char* test_file_disk_addressssing() {
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
-	const int allocation_size = 266886;
+
+	const int allocation_size = 266310;
 	LList* addresses;
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
 
@@ -199,7 +204,7 @@ static char* test_file_disk_addressssing() {
 	}
 
 	Inode inode = { 0 };
-	stream_write_addresses(&disk, &inode, *addresses);
+	int ret = stream_write_addresses(&disk, &inode, *addresses);
 
 	llist_free(addresses);
 	mem_free(disk.data_bitmap);
@@ -259,7 +264,7 @@ static char* test_disk_io() {
 	mem_free(read_1);
 	mem_free(read_2);
 	mem_free(read_3);
-	disk_remove(FILESYSTEM_FILE_NAME);
+	disk_remove("filesystem2.bin");
 	return 0;
 }
 
@@ -353,8 +358,7 @@ static char* test_write_data_to_disk() {
 		mem_write(&data, i, values[i]);
 	}
 
-	fs_write_data_to_disk(&disk, data, *list);
-	mem_dump(disk.data, "dump2.bin");
+	fs_write_data_to_disk(&disk, data, *list, 0);
 	mem_free(data);
 	mem_free(disk_data);
 	llist_free(list);
@@ -781,8 +785,8 @@ static char* test_inode_serialization() {
 } */
 
 static char* test_superblock_serialization() {
-	Superblock superblock = {0};
-	Superblock superblock2 = {0};
+	Superblock superblock = { 0 };
+	Superblock superblock2 = { 0 };
 
 	fs_create_superblock(&superblock, 4096);
 
@@ -790,8 +794,8 @@ static char* test_superblock_serialization() {
 	superblock.num_used_blocks = 523453;
 	superblock.num_used_inodes = 2323;
 	superblock.data_bitmap_circular_loc = 98734223;
-	superblock.flags = 0xAABB;	
-	HeapData data = {0};
+	superblock.flags = 0xAABB;
+	HeapData data = { 0 };
 	mem_alloc(&data, 512);
 
 	serialize_superblock(&data, superblock);
@@ -829,7 +833,6 @@ static char* test_superblock_calculations() {
 	mu_assert("[MinUnit][FAIL] superblock calculation: inode table start address incorrect", superblock.inode_table_start_addr == 2);
 	mu_assert("[MinUnit][FAIL] superblock calculation: data block bitmap addr incorrect", superblock.data_block_bitmap_addr == 130);
 	mu_assert("[MinUnit][FAIL] superblock calculation: data block start addr incorrect", superblock.data_blocks_start_addr == 132);
-
 	return 0;
 }
 
@@ -905,6 +908,8 @@ static char* all_tests() {
 	mu_run_test(test_disk_io);
 	mu_run_test(test_disk_io_2);
 	mu_run_test(test_file_disk_addressssing);
+	mu_run_test(test_div_round_up);
+	mu_run_test(test_read_from_disk_by_seq);
 	return 0;
 }
 
