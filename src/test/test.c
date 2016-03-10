@@ -8,6 +8,7 @@
 #include "../bitmap.h"
 #include "../serialize.h"
 #include "../stream.h"
+#include "../directory.h"
 #include "../../../core/src/llist.h"
 #include "test.h"
 
@@ -665,27 +666,27 @@ static char* test_directory_get_inode_number() {
 	HeapData invalid = {0};
 	util_string_to_heap("INVALID", &invalid);
 
-	fs_add_directory_entry(&directory, entry1);
-	fs_add_directory_entry(&directory, entry2);
-	fs_add_directory_entry(&directory, entry3);
-	fs_add_directory_entry(&directory, entry4);
-	fs_add_directory_entry(&directory, entry5);
-	fs_add_directory_entry(&directory, entry6);
+	dir_add_entry(&directory, entry1);
+	dir_add_entry(&directory, entry2);
+	dir_add_entry(&directory, entry3);
+	dir_add_entry(&directory, entry4);
+	dir_add_entry(&directory, entry5);
+	dir_add_entry(&directory, entry6);
 
 	uint32_t inode_number = 0;
-	fs_directory_get_inode_number(directory, entry1.name, &inode_number);
+	dir_get_inode_number(directory, entry1.name, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: retrieved inode incorrect [1]", inode_number == 988722354);
-	fs_directory_get_inode_number(directory, entry2.name, &inode_number);
+	dir_get_inode_number(directory, entry2.name, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: retrieved inode incorrect [2]", inode_number == 673829463);
-	fs_directory_get_inode_number(directory, entry3.name, &inode_number);
+	dir_get_inode_number(directory, entry3.name, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: retrieved inode incorrect [3]", inode_number == 382647549);
-	fs_directory_get_inode_number(directory, entry4.name, &inode_number);
+	dir_get_inode_number(directory, entry4.name, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: retrieved inode incorrect [4]", inode_number == 769823473);
-	fs_directory_get_inode_number(directory, entry5.name, &inode_number);
+	dir_get_inode_number(directory, entry5.name, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: retrieved inode incorrect [5]", inode_number == 102938743);
-	fs_directory_get_inode_number(directory, entry6.name, &inode_number);
+	dir_get_inode_number(directory, entry6.name, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: retrieved inode incorrect [6]", inode_number == 587493523);
-	int ret = fs_directory_get_inode_number(directory, invalid, &inode_number);
+	int ret = dir_get_inode_number(directory, invalid, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: expected inode not found error", ret == ERR_INODE_NOT_FOUND);
 
 
@@ -722,12 +723,12 @@ static char* test_directory_add_entry() {
 	entry2.inode_number = 0x83f7bc82;
 	entry2.name = filename2;
 
-	fs_add_directory_entry(&directory, entry);
+	dir_add_entry(&directory, entry);
 	ret = memcmp(expected, directory.data, 17);
 	mu_assert("[MinUnit][ERROR] directory add file: binary data produced incorrect [1]", ret == 0);
 
 
-	ret = fs_add_directory_entry(&directory, entry2);
+	ret = dir_add_entry(&directory, entry2);
 	ret = memcmp(expected2, directory.data, sizeof(expected2));
 
 	mu_assert("[MinUnit][ERROR] directory add file: binary data produced incorrect [2]", ret == 0);

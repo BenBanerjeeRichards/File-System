@@ -143,8 +143,6 @@ typedef struct {
 
 
 int fs_create_superblock(Superblock*, uint64_t);
-int fs_add_directory_entry(Directory*, DirectoryEntry);
-int fs_directory_get_inode_number(Directory, HeapData, uint32_t*);
 int fs_allocate_blocks(Disk*, int, LList**); 
 int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, int data_block);
 HeapData fs_read_from_disk(Disk disk, LList addresses, int data_block, int* error);
