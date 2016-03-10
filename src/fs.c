@@ -220,3 +220,19 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, int data_b
 
 	return SUCCESS;
 }
+
+HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, int data_block, int* error) {
+	const int location = seq.start_addr * BLOCK_SIZE;
+	const int size = seq.length * BLOCK_SIZE;
+
+	int ret = 0;
+	if (data_block) {
+		const int offset = disk.superblock.data_blocks_start_addr * BLOCK_SIZE;
+		HeapData data = disk_read_offset(disk, location, offset, size, &ret);
+		return data;
+	}
+	else {
+		HeapData data = disk_read(disk, location, size, &ret);
+		return data;
+	}
+}

@@ -55,6 +55,74 @@ Disk create_fragmented_disk() {
 	return disk;
 }
 
+static char* test_read_from_disk_by_seq() {
+	Disk disk = { 0 };
+	Superblock sb = { 0 };
+	Bitmap db = { 0 };
+	
+	const int disk_size = MEGA;
+	const char* fname = "test.bin";
+	const int size_1 = 2;
+	const int size_2 = 1;
+	const int start_1 = 0;
+	const int start_2 = 5;
+
+	fs_create_superblock(&sb, disk_size);
+	disk.superblock = sb;
+	disk.data_bitmap = db;
+	disk.size = disk_size;
+	disk_mount(&disk, fname);
+
+	HeapData data_1 = { 0 };
+	mem_alloc(&data_1, BLOCK_SIZE * size_1);
+	memset(data_1.data, 0xAA, BLOCK_SIZE * size_1);
+	
+	HeapData data_2 = { 0 };
+	mem_alloc(&data_2, BLOCK_SIZE * size_2);
+	memset(data_2.data, 0xBB, BLOCK_SIZE * size_2);
+
+	HeapData data = { 0 };
+	mem_alloc(&data, BLOCK_SIZE * (size_1 + size_2));
+	memcpy(&data.data[0], data_1.data, size_1 * BLOCK_SIZE);
+	memcpy(&data.data[BLOCK_SIZE * size_1], data_2.data, size_2 * BLOCK_SIZE);
+
+
+	BlockSequence* seq_1 = malloc(sizeof(BlockSequence));
+	seq_1->length = size_1;
+	seq_1->start_addr = start_1;
+
+	BlockSequence* seq_2 = malloc(sizeof(BlockSequence));
+	seq_2->length = size_2;
+	seq_2->start_addr = start_2;
+
+	LList* addresses = llist_new();
+	addresses->free_element = &free_element_standard;
+
+	llist_insert(addresses, seq_1);
+	llist_insert(addresses, seq_2);
+	
+	fs_write_data_to_disk(&disk, data, *addresses, 1);
+
+	int ret = 0;
+	HeapData read_1 = fs_read_from_disk_by_sequence(disk, *seq_1, 1, &ret);
+	HeapData read_2 = fs_read_from_disk_by_sequence(disk, *seq_2, 1, &ret);
+	int cmp = 0;
+	cmp += memcmp(read_1.data, data_1.data, data_1.size);
+	cmp += memcmp(read_2.data, data_2.data, data_2.size);
+
+	mu_assert("[MinUnit][TEST] read data from disk seq: comparison failed", cmp == 0);
+
+	fclose(disk.file);
+	free(seq_1);
+	free(seq_2);
+	llist_free(addresses);
+	mem_free(data_1);
+	mem_free(data_2);
+	mem_free(data);
+	remove(fname);
+	return 0;
+}
+
 static char* test_write_data_to_disk_2() {
 	const char* fname = "test_write_to_disk.bin";
 	const int size_1 = 2;
