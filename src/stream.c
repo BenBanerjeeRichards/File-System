@@ -12,19 +12,6 @@ int _stream_write_seq_to_heap(BlockSequence seq, HeapData* data, int location) {
 
 	return SUCCESS;
 }
-int stream_write_addresses_to_heap(LList addresses, HeapData* data) {
-	LListNode* current = addresses.head;
-	int ret = 0;
-
-	for (int i = 0; i < addresses.num_elements; i++) {
-		BlockSequence* seq = current->element;
-		ret = _stream_write_seq_to_heap(*seq, data, i * BLOCK_SEQ_SIZE);
-		if (ret != SUCCESS) return ret;
-		current = current->next;
-	}
-
-	return SUCCESS;
-}
 
 int _stream_write_address_level(Disk disk, BlockSequence* inode_data, LList addresses, LList** next_addresses, HeapData* next_data) {
 	// Alloc memory for serialized addresses

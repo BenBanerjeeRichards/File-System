@@ -8,5 +8,4 @@
 #include "disk.h"
 
 int stream_write_addresses(Disk* disk, Inode* inode, LList addresses);
-int stream_write_addresses_to_heap(LList addresses, HeapData* data);
 #endif
