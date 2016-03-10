@@ -8,7 +8,6 @@ uint32_t round_up_nearest_multiple(uint32_t, uint32_t);
 int div_round_up(int a, int b);
 
 int util_string_to_heap(char*, HeapData*);
-int util_path_next_dir_name(HeapData, int, HeapData*);
 
 int compare_superblock(Superblock, Superblock);
 int compare_inode(Inode, Inode);

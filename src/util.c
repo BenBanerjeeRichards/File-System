@@ -16,34 +16,6 @@ int div_round_up(int a, int b) {
 	return quot + 1;
 }
 
-int util_path_next_dir_name(HeapData path, int start, HeapData* name) {
-	if (!path.valid) return ERR_INVALID_MEMORY_ACCESS;
-	if (start < 0 || start > path.size) return ERR_INVALID_MEMORY_ACCESS;
-	int error = 0;
-	int current_name_len = 0;
-
-	for (int i = start; i < path.size; i++) {
-		uint8_t byte = mem_read(path, i, &error);
-		if (error != SUCCESS) return error;
-		
-		// Check for forward slash
-		if (byte == 47) {
-			break;
-		}
-
-		current_name_len += 1;
-		// If code exits loop normally, then it is the end of the string
-		// which terminates the current dir name (in addition to a forwards 
-		// slash)
-	}
-	int ret = mem_alloc(name, current_name_len);
-	if (ret != SUCCESS) return ret;
-	
-	memcpy(name->data, &path.data[start], current_name_len);
-	name->size = current_name_len;
-	return SUCCESS;
-}
-
 int util_string_to_heap(char* string, HeapData* heap) {
 	if (string == NULL) return ERR_NULL_STRING;
 

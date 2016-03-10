@@ -563,7 +563,7 @@ static char* test_next_dir_name() {
 	util_string_to_heap(p, &path);
 
 	int location = 0;
-	int t = util_path_next_dir_name(path, location, &name);
+	int t = dir_find_next_path_name(path, location, &name);
 	location += name.size + 1;	// Add one to get past forward slash	
 	int ret = memcmp(name.data, expected1, name.size);
 	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [1]", ret == 0);
@@ -571,7 +571,7 @@ static char* test_next_dir_name() {
 	mu_assert("[MinUnit][TEST] next dir name: length of directory incorrect [1]", name.size == 4);
 	mem_free(name);
 
-	util_path_next_dir_name(path, location, &name);
+	dir_find_next_path_name(path, location, &name);
 	location += name.size + 1;	// Add one to get past forward slash	
 	ret = memcmp(name.data, expected2, name.size);
 	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [2]", ret == 0);
@@ -579,7 +579,7 @@ static char* test_next_dir_name() {
 	mu_assert("[MinUnit][TEST] next dir name: length of directory incorrect [1]", name.size == 10);
 	mem_free(name);
 	
-	util_path_next_dir_name(path, location, &name);
+	dir_find_next_path_name(path, location, &name);
 	location += name.size + 1;	// Add one to get past forward slash	
 	ret = memcmp(name.data, expected3, name.size);
 	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [3]", ret == 0);
@@ -587,7 +587,7 @@ static char* test_next_dir_name() {
 	mu_assert("[MinUnit][TEST] next dir name: length of directory incorrect [1]", name.size == 7);
 	mem_free(name);
 
-	util_path_next_dir_name(path, location, &name);
+	dir_find_next_path_name(path, location, &name);
 	location += name.size + 1;	// Add one to get past forward slash	
 	ret = memcmp(name.data, expected4, name.size);
 	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [4]", ret == 0);

@@ -66,3 +66,31 @@ int dir_get_inode_number(Directory directory, HeapData name, uint32_t* inode_num
 
 	return ERR_INODE_NOT_FOUND;
 }
+
+int dir_find_next_path_name(HeapData path, int start, HeapData* name) {
+	if (!path.valid) return ERR_INVALID_MEMORY_ACCESS;
+	if (start < 0 || start > path.size) return ERR_INVALID_MEMORY_ACCESS;
+	int error = 0;
+	int current_name_len = 0;
+
+	for (int i = start; i < path.size; i++) {
+		uint8_t byte = mem_read(path, i, &error);
+		if (error != SUCCESS) return error;
+
+		// Check for forward slash
+		if (byte == 47) {
+			break;
+		}
+
+		current_name_len += 1;
+		// If code exits loop normally, then it is the end of the string
+		// which terminates the current dir name (in addition to a forwards 
+		// slash)
+	}
+	int ret = mem_alloc(name, current_name_len);
+	if (ret != SUCCESS) return ret;
+
+	memcpy(name->data, &path.data[start], current_name_len);
+	name->size = current_name_len;
+	return SUCCESS;
+}
