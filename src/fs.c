@@ -186,7 +186,7 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 	return SUCCESS;
 }
 
-int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses) {
+int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, int data_block) {
 	if (disk->file == NULL) return ERR_INVALID_FILE_OPERATION;
 	if (addresses.num_elements == 0) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
@@ -203,7 +203,13 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses) {
 
 		memcpy(section.data, &data.data[blocks_written * BLOCK_SIZE], BLOCK_SIZE * seq->length);
 
-		ret = disk_write(disk, seq->start_addr * BLOCK_SIZE, section);
+		if (!data_block) {
+			ret = disk_write(disk, seq->start_addr * BLOCK_SIZE, section);
+		}
+		else {
+			int offset = disk->superblock.data_blocks_start_addr;
+			disk_write_offset(disk, seq->start_addr * BLOCK_SIZE, offset, section);
+		}
 		if (ret != SUCCESS) return ret;
 
 
