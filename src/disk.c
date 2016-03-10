@@ -184,7 +184,7 @@ HeapData disk_read_offset(Disk disk, int location, int offset, int size, int* er
 		return read_data;
 	}
 	else {
-		read_data = disk_read(disk, offset, size, &ret);
+		read_data = disk_read(disk, start_read_loc, size, &ret);
 		if (ret != SUCCESS) {
 			*error = ret;
 		}
