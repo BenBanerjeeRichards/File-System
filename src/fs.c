@@ -207,7 +207,7 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, int data_b
 			ret = disk_write(disk, seq->start_addr * BLOCK_SIZE, section);
 		}
 		else {
-			int offset = disk->superblock.data_blocks_start_addr;
+			int offset = disk->superblock.data_blocks_start_addr * BLOCK_SIZE;
 			disk_write_offset(disk, seq->start_addr * BLOCK_SIZE, offset, section);
 		}
 		if (ret != SUCCESS) return ret;
