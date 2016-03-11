@@ -100,7 +100,7 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	return SUCCESS;
 }
 
-LList stream_read_address_block(Disk disk, BlockSequence block, int* error) {
+LList* stream_read_address_block(Disk disk, BlockSequence block, int* error) {
 	int ret = 0;
 	LList* addresses = llist_new();
 	addresses->free_element = &free_element_standard;
@@ -113,26 +113,79 @@ LList stream_read_address_block(Disk disk, BlockSequence block, int* error) {
 		seq->start_addr = util_read_uint32(data, i, &ret);
 		if (ret != SUCCESS) {
 			*error = ret;
-			return *addresses;
+			return addresses;
 		}
 
 		seq->length = util_read_uint32(data, i + 4, &ret);
 		if (ret != SUCCESS) {
 			*error = ret;
-			return *addresses;
+			return addresses;
 		}
 
 		llist_insert(addresses, seq);
 	}
 
-	return *addresses;
+	return addresses;
+}
+
+int stream_double_to_block_seq(Disk disk, BlockSequence double_indirect, LList** addresses) {
+	*addresses = llist_new();
+	(*addresses)->free_element = &free_element_standard;
+	int ret = 0;
+
+	// Double indirect -> indirect addresses
+	LList* indirect_addresses = stream_read_address_block(disk, double_indirect, &ret);
+
+	// For each indirect addresses, indirect -> block sequences
+	LListNode* current = indirect_addresses->head;
+	for (int i = 0; i < indirect_addresses->num_elements; i++) {
+		BlockSequence* indirect_addr = current->element;
+		if (block_seq_is_empty(*indirect_addr)) break;
+
+		LList* indirects = stream_read_address_block(disk, *indirect_addr, &ret);
+		if (ret != SUCCESS) return ret;
+
+		llist_append(*addresses, *indirects);
+		free(indirects);	// TODO fix this
+		current = current->next;
+	}
+
+	return SUCCESS; 
+}
+
+int stream_triple_to_block_seq(Disk disk, BlockSequence triple_indirect, LList** addresses) {
+	*addresses = llist_new();
+	(*addresses)->free_element = &free_element_standard;
+	int ret = 0;
+
+	// triple indirect -> double indirect addresses
+	LList* double_indirect_addresses = stream_read_address_block(disk, triple_indirect, &ret);
+
+	// For each double indirect addresses, double -> block sequences
+	LListNode* current = double_indirect_addresses->head;
+	for (int i = 0; i < double_indirect_addresses->num_elements; i++) {
+		BlockSequence* double_indirect_addr = current->element;
+		if (block_seq_is_empty(*double_indirect_addr)) break;
+
+		LList* block_sequences = llist_new();
+		block_sequences->free_element = &free_element_standard;
+
+		ret = stream_double_to_block_seq(disk, *double_indirect_addr, &block_sequences);
+		if (ret != SUCCESS) return ret;
+
+		ret = llist_append(*addresses, *block_sequences);
+		if (ret != SUCCESS) return ret;
+		free(block_sequences);
+	}
+
+	return SUCCESS;
 }
 
 LList stream_read_addresses(Disk disk, Inode inode, int* error) {
+	int ret = 0;
 	LList* addresses = llist_new();
 	addresses->free_element = &free_element_standard;
 
-	int ret = 0;
 	// Add directs
 	for (int i = 0; i < DIRECT_BLOCK_NUM; i++) {
 		ret = llist_insert(addresses, &inode.data.direct[i]);
@@ -141,6 +194,52 @@ LList stream_read_addresses(Disk disk, Inode inode, int* error) {
 			return *addresses;
 		}
 	}
+
+	if (block_seq_is_empty(inode.data.indirect)) {
+		*error = SUCCESS;
+		return *addresses;
+	}
+
+	LList* indirect_sequences = stream_read_address_block(disk, inode.data.indirect, &ret);
+	if (ret != SUCCESS) {
+		*error = ret;
+		return *addresses;
+	}
+
+	if (block_seq_is_empty(inode.data.double_indirect)) {
+		*error = SUCCESS;
+		return *addresses;
+	}
+
+
+	LList* double_indirect_sequences;
+	ret = stream_double_to_block_seq(disk, inode.data.double_indirect, &double_indirect_sequences);
+	if (ret != SUCCESS) {
+		*error = ret;
+		return *addresses;
+	}
+
+	if (block_seq_is_empty(inode.data.triple_indirect)) {
+		*error = SUCCESS;
+		return *addresses;
+	}
+
+
+	LList* triple_indirect_sequences;
+	ret = stream_triple_to_block_seq(disk, inode.data.triple_indirect, &triple_indirect_sequences);
+	if (ret != SUCCESS) {
+		*error = ret;
+		return *addresses;
+	}
+
+	// TODO fix error codes with llist
+	llist_append(addresses, *indirect_sequences);
+	llist_append(addresses, *double_indirect_sequences);
+	llist_append(addresses, *triple_indirect_sequences);
+	
+	free(indirect_sequences);
+	free(double_indirect_sequences);
+	free(triple_indirect_sequences);
 
 	return *addresses;
 }

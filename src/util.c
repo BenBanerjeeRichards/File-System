@@ -8,6 +8,10 @@
 #include "util.h"
 #include "constants.h"
 
+bool block_seq_is_empty(BlockSequence seq) {
+	return seq.length == 0 && seq.start_addr == 0;
+}
+
 int div_round_up(int a, int b) {
 	int quot = a / b;
 	if (quot * b == a) {

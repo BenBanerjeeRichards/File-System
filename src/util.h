@@ -6,6 +6,7 @@
 
 uint32_t round_up_nearest_multiple(uint32_t, uint32_t);
 int div_round_up(int a, int b);
+bool block_seq_is_empty(BlockSequence seq);
 
 int util_string_to_heap(char*, HeapData*);
 
