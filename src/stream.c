@@ -94,8 +94,53 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	if (triple_indirect_addresses->num_elements > 1) {
 		return ERR_DISK_FULL;
 	}
-	ret = fs_write_data_to_disk(disk, triple_indirect_data, *triple_indirect_addresses, 1);
+	ret = fs_write_data_to_disk(disk, triple_indirect_data, *triple_indirect_addresses, true);
 	if (ret != SUCCESS) return ret;
 
 	return SUCCESS;
+}
+
+LList stream_read_address_block(Disk disk, BlockSequence block, int* error) {
+	int ret = 0;
+	LList* addresses = llist_new();
+	addresses->free_element = &free_element_standard;
+
+
+	HeapData data = fs_read_from_disk_by_sequence(disk, block, true, &ret);
+	for (int i = 0; i < data.size; i += BLOCK_SEQ_SIZE) {
+		BlockSequence* seq = malloc(sizeof(BlockSequence));
+		
+		seq->start_addr = util_read_uint32(data, i, &ret);
+		if (ret != SUCCESS) {
+			*error = ret;
+			return *addresses;
+		}
+
+		seq->length = util_read_uint32(data, i + 4, &ret);
+		if (ret != SUCCESS) {
+			*error = ret;
+			return *addresses;
+		}
+
+		llist_insert(addresses, seq);
+	}
+
+	return *addresses;
+}
+
+LList stream_read_addresses(Disk disk, Inode inode, int* error) {
+	LList* addresses = llist_new();
+	addresses->free_element = &free_element_standard;
+
+	int ret = 0;
+	// Add directs
+	for (int i = 0; i < DIRECT_BLOCK_NUM; i++) {
+		ret = llist_insert(addresses, &inode.data.direct[i]);
+		if (ret != SUCCESS) {
+			*error = ret;
+			return *addresses;
+		}
+	}
+
+	return *addresses;
 }
