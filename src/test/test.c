@@ -119,7 +119,7 @@ static char* test_read_from_disk_by_seq() {
 	fclose(disk.file);
 	free(seq_1);
 	free(seq_2);
-	llist_free(addresses);
+	//llist_free(addresses);
 	mem_free(data_1);
 	mem_free(data_2);
 	mem_free(data);
@@ -207,11 +207,11 @@ static char* test_file_disk_addressssing() {
 	Inode inode = { 0 };
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
 
-	LList indirect = stream_read_address_block(disk, inode.data.indirect, &ret);
-	current = indirect.head;
+	LList* indirect = stream_read_address_block(disk, inode.data.indirect, &ret);
+	current = indirect->head;
 	
-	mu_assert("[MinUnit][TEST] file disk addressing: indirect: incorrect number of addresses", indirect.num_elements == 64);
-	for (int i = 0; i < indirect.num_elements; i++) {
+	mu_assert("[MinUnit][TEST] file disk addressing: indirect: incorrect number of addresses", indirect->num_elements == 64);
+	for (int i = 0; i < indirect->num_elements; i++) {
 		BlockSequence* seq = current->element;
 		mu_assert("[MinUnit][TEST] file disk addressing: indirect: unexpected start address", seq->start_addr == 13 + i * 2);
 		mu_assert("[MinUnit][TEST] file disk addressing: indirect: unexpected length", seq->length == 1);
@@ -219,7 +219,19 @@ static char* test_file_disk_addressssing() {
 		current = current->next;
 	}
 
-	llist_free(addresses);
+	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+
+	LListNode* current_a = all_addresses.head;
+	for (int i = 0; i < addresses->num_elements; i++) {
+		int location = 2 * i + 1;	// Odd numbers for start_addr
+		BlockSequence* seq = current_a->element;
+		//printf("%i\n", seq->start_addr);
+		mu_assert("[MinUnit][TEST] file disk addressing: incorrect start address", seq->start_addr == location);
+		mu_assert("[MinUnit][TEST] file disk addressing: incorrect length", seq->length == 1);
+		current_a = current_a->next;
+	}
+
+	//llist_free(&all_addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 

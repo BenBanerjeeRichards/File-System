@@ -176,6 +176,7 @@ int stream_triple_to_block_seq(Disk disk, BlockSequence triple_indirect, LList**
 		ret = llist_append(*addresses, *block_sequences);
 		if (ret != SUCCESS) return ret;
 		free(block_sequences);
+		current = current->next;
 	}
 
 	return SUCCESS;
