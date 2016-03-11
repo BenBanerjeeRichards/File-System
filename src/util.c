@@ -8,6 +8,15 @@
 #include "util.h"
 #include "constants.h"
 
+void util_print_block_seq_list(LList list) {
+	LListNode* current = list.head;
+	for (int i = 0; i < list.num_elements; i++) {
+		BlockSequence* seq = current->element;
+		printf("%i:%i\n", seq->start_addr, seq->length);
+		current = current->next;
+	}
+}
+
 bool block_seq_is_empty(BlockSequence seq) {
 	return seq.length == 0 && seq.start_addr == 0;
 }
