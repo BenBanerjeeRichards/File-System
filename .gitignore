@@ -17,3 +17,4 @@ src/FileSystem.sln
 src/FileSystem.opensdf
 src/.vs/FileSystem/v14/.suo
 obj/
+out.txt
