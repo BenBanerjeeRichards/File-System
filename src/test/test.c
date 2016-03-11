@@ -207,6 +207,18 @@ static char* test_file_disk_addressssing() {
 	Inode inode = { 0 };
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
 
+	LList indirect = stream_read_address_block(disk, inode.data.indirect, &ret);
+	current = indirect.head;
+	
+	mu_assert("[MinUnit][TEST] file disk addressing: indirect: incorrect number of addresses", indirect.num_elements == 64);
+	for (int i = 0; i < indirect.num_elements; i++) {
+		BlockSequence* seq = current->element;
+		mu_assert("[MinUnit][TEST] file disk addressing: indirect: unexpected start address", seq->start_addr == 13 + i * 2);
+		mu_assert("[MinUnit][TEST] file disk addressing: indirect: unexpected length", seq->length == 1);
+
+		current = current->next;
+	}
+
 	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
