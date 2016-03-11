@@ -120,7 +120,7 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 	return SUCCESS;
 }
 
-int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, int data_block) {
+int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_block) {
 	if (disk->file == NULL) return ERR_INVALID_FILE_OPERATION;
 	if (addresses.num_elements == 0) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
@@ -155,7 +155,7 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, int data_b
 	return SUCCESS;
 }
 
-HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, int data_block, int* error) {
+HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, bool data_block, int* error) {
 	const int location = seq.start_addr * BLOCK_SIZE;
 	const int size = seq.length * BLOCK_SIZE;
 

@@ -68,7 +68,7 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 
 
 	_stream_write_address_level(*disk, &inode->data.indirect, *indirect_addresses, &indirect_data_addresses, &indirect_data);
-	ret = fs_write_data_to_disk(disk, indirect_data, *indirect_data_addresses, 1);
+	ret = fs_write_data_to_disk(disk, indirect_data, *indirect_data_addresses, true);
 	if (ret != SUCCESS) return ret;
 
 	LList* remaining_indirects = llist_create_sublist(*indirect_data_addresses, 1, &ret);
@@ -80,7 +80,7 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 
 
 	_stream_write_address_level(*disk, &inode->data.double_indirect, *remaining_indirects, &double_indirect_addresses, &double_indirect_data);
-	ret = fs_write_data_to_disk(disk, double_indirect_data, *double_indirect_addresses, 1);
+	ret = fs_write_data_to_disk(disk, double_indirect_data, *double_indirect_addresses, true);
 	if (ret != SUCCESS) return ret;
 
 	LList* remaining_double_indirects = llist_create_sublist(*double_indirect_addresses, 1, &ret);

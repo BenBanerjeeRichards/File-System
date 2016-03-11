@@ -2,6 +2,8 @@
 #define FS_FS 
 
 #include <stdint.h>
+#include <stdbool.h>
+
 #include "memory.h"
 #include "constants.h"
 #include "bitmap.h"
@@ -144,7 +146,7 @@ typedef struct {
 
 int fs_create_superblock(Superblock*, uint64_t);
 int fs_allocate_blocks(Disk*, int, LList**); 
-int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, int data_block);
-HeapData fs_read_from_disk(Disk disk, LList addresses, int data_block, int* error);
-HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, int data_block, int* error);
+int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_block);
+HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* error);
+HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, bool data_block, int* error);
 #endif
