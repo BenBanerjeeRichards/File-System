@@ -90,6 +90,7 @@ int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 	Superblock* sb = &disk->superblock;	
 	double ft_ratio = (double)sb->num_used_blocks / (double)sb->num_blocks;
+
 	*addresses = llist_new();
 	(*addresses)->free_element = &free_element_standard;
 

@@ -22,7 +22,7 @@ Disk create_fragmented_disk() {
 	disk.superblock = sb;
 	disk.data_bitmap = data_bt;
 	disk.size = size;
-
+	
 	fs_create_superblock(&disk.superblock, size);
 	//disk_mount(&disk, "fragmented.bin");
 	// TODO fix one off 
@@ -205,18 +205,6 @@ static char* test_file_disk_addressssing() {
 	Inode inode = { 0 };
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
 
-	LList* indirect = stream_read_address_block(disk, inode.data.indirect, &ret);
-	current = indirect->head;
-	
-	mu_assert("[MinUnit][TEST] file disk addressing: indirect: incorrect number of addresses", indirect->num_elements == 64);
-	for (int i = 0; i < indirect->num_elements; i++) {
-		BlockSequence* seq = current->element;
-		mu_assert("[MinUnit][TEST] file disk addressing: indirect: unexpected start address", seq->start_addr == 13 + i * 2);
-		mu_assert("[MinUnit][TEST] file disk addressing: indirect: unexpected length", seq->length == 1);
-
-		current = current->next;
-	}
-
 	LList all_addresses = stream_read_addresses(disk, inode, &ret);
 
 	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
@@ -229,6 +217,32 @@ static char* test_file_disk_addressssing() {
 
 	return 0;
 }
+
+static char* test_file_disk_addressing_2() {
+	Inode inode = {0};
+	const int allocation_size = 4;
+	int ret = 0;
+	Disk disk = create_fragmented_disk();
+	disk.file = fopen("fragmented.bin", "r+");
+	disk.superblock.num_used_blocks = disk.superblock.num_data_blocks - 5;
+
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+	
+	stream_write_addresses(&disk, &inode, *addresses);
+	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+
+	util_print_block_seq_list(all_addresses);
+
+	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] file disk addressing 2: not equal pre/post serialization", res);
+
+	mem_free(disk.data_bitmap);
+	fclose(disk.file);
+	return 0;
+
+}
+
 static char* test_disk_io() {
 	Disk disk = { 0 };
 	disk.size = DISK_SIZE;
@@ -924,6 +938,7 @@ static char* all_tests() {
 	mu_run_test(test_file_disk_addressssing);
 	mu_run_test(test_div_round_up);
 	mu_run_test(test_read_from_disk_by_seq);
+	mu_run_test(test_file_disk_addressing_2);
 
 	//mu_run_test(test_inode_serialization);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test

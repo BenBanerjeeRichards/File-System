@@ -44,13 +44,15 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 
 	// Write directs to the inode
 	LListNode* current = addresses.head;
-	int num_directs = addresses.num_elements < 6 ? addresses.num_elements : 6;
+	int num_directs = addresses.num_elements < DIRECT_BLOCK_NUM ? addresses.num_elements : DIRECT_BLOCK_NUM;
 
 	for (int i = 0; i < num_directs; i++) {
 		BlockSequence* seq = current->element;
 		inode->data.direct[i] = *seq;
 		current = current->next;
 	}
+
+	if(num_directs < DIRECT_BLOCK_NUM) return SUCCESS;
 
 	// Split up into direct and indirects 
 	LList* indirect_addresses = llist_create_sublist(addresses, DIRECT_BLOCK_NUM, &ret);
@@ -193,6 +195,11 @@ LList stream_read_addresses(Disk disk, Inode inode, int* error) {
 
 	// Add directs
 	for (int i = 0; i < DIRECT_BLOCK_NUM; i++) {
+		if(block_seq_is_empty(inode.data.direct[i])) {
+			*error = SUCCESS;
+			return *addresses;
+		}
+
 		ret = llist_insert(addresses, &inode.data.direct[i]);
 		if (ret != SUCCESS) {
 			*error = ret;
