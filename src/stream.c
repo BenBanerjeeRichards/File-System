@@ -122,6 +122,10 @@ LList* stream_read_address_block(Disk disk, BlockSequence block, int* error) {
 			return addresses;
 		}
 
+		if(block_seq_is_empty(*seq)) {
+			break;
+		}
+
 		llist_insert(addresses, seq);
 	}
 
