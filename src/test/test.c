@@ -14,8 +14,26 @@
 
 int tests_run = 0;
 
+// From http://stackoverflow.com/questions/2509679/how-to-generate-a-random-number-from-within-a-range
+unsigned int rand_interval(unsigned int min, unsigned int max) {
+	int r;
+	const unsigned int range = 1 + max - min;
+	const unsigned int buckets = RAND_MAX / range;
+	const unsigned int limit = buckets * range;
+
+	/* Create equal size buckets all in a row, then fire randomly towards
+	* the buckets until you land in one of them. All buckets are equally
+	* likely. If you land off the end of the line of buckets, try again. */
+	do {
+		r = rand();
+	} while(r >= limit);
+
+	return min + (r / buckets);
+}
+
+
 Disk create_fragmented_disk() {
-	const int size = MEGA * 310;	// ** Needs new disk IMPORTANT 
+	const int size = MEGA * 310;	
 	Disk disk = { 0 };
 	Superblock sb = { 0 };
 	Bitmap data_bt = { 0 };
@@ -56,6 +74,41 @@ Disk create_fragmented_disk() {
 
 	return disk;
 }
+
+Disk create_less_fragmented_disk() {
+	const int size = MEGA * 310;	
+	Disk disk = {0};
+	Superblock sb = {0};
+	Bitmap data_bt = {0};
+	disk.superblock = sb;
+	disk.data_bitmap = data_bt;
+	disk.size = size;
+
+	fs_create_superblock(&disk.superblock, size);
+	//disk_mount(&disk, "less_fragmented.bin");
+
+	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes + 1);
+
+	HeapData full_block = {0};
+	mem_alloc(&full_block, BLOCK_SIZE);
+	memset(full_block.data, 0xFF, full_block.size);
+
+	int ret = 0;
+
+	int current_block = 0;
+	while(current_block < disk.superblock.num_data_blocks) {
+		bitmap_write(&disk.data_bitmap, current_block, 1);
+		//ret = disk_write(&disk, BLOCK_SIZE * (disk.superblock.data_blocks_start_addr + current_block), full_block);
+		//if(ret != SUCCESS) printf("Error writing block %i to disk", current_block);
+		current_block += 1 + rand_interval(0, 5);		//rand() in unit tests is a terrible idea FIXME
+	}
+
+
+	mem_free(full_block);
+
+	return disk;
+}
+
 
 static char* test_read_from_disk_by_seq() {
 	Disk disk = { 0 };
@@ -157,6 +210,8 @@ static char* test_write_data_to_disk_2() {
 
 	HeapData data = { 0 };
 
+
+
 	mem_alloc(&data, BLOCK_SIZE * (size_1 + size_2 + size_3));
 
 	memset(&data.data[0], 0xAA, BLOCK_SIZE * size_1);
@@ -183,6 +238,100 @@ static char* test_write_data_to_disk_2() {
 	
 	return 0;
 }
+
+static char* test_lf_disk_addressing() {
+	Disk disk = create_less_fragmented_disk();
+	mem_dump(disk.data_bitmap, "LF.bin");
+	disk.file = fopen("less_fragmented.bin", "r+");
+
+	const int allocation_size = 266310;
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+
+	Inode inode = {0};
+	int ret = stream_write_addresses(&disk, &inode, *addresses);
+	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+
+	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] file disk addressing: not equal pre/post serialization", res);
+
+	// TODO fix this double free
+	//llist_free(&all_addresses);
+	mem_free(disk.data_bitmap);
+	fclose(disk.file);
+
+	return 0;
+}
+
+static char* test_lf_disk_addressing_2() {
+	Disk disk = create_less_fragmented_disk();
+	mem_dump(disk.data_bitmap, "LF.bin");
+	disk.file = fopen("less_fragmented.bin", "r+");
+
+	const int allocation_size = 266310;
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+
+	Inode inode = {0};
+	int ret = stream_write_addresses(&disk, &inode, *addresses);
+	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+
+	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] file disk addressing less fragmented 1: not equal pre/post serialization", res);
+
+	//llist_free(&all_addresses);
+	mem_free(disk.data_bitmap);
+	fclose(disk.file);
+
+	return 0;
+}
+
+static char* test_lf_disk_addressing_3() {
+	Disk disk = create_less_fragmented_disk();
+	mem_dump(disk.data_bitmap, "LF.bin");
+	disk.file = fopen("less_fragmented.bin", "r+");
+
+	const int allocation_size = 31;
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+
+	Inode inode = {0};
+	int ret = stream_write_addresses(&disk, &inode, *addresses);
+	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+
+	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] file disk addressing less fragmented 3: not equal pre/post serialization", res);
+
+	mem_free(disk.data_bitmap);
+	fclose(disk.file);
+
+	return 0;
+}
+
+static char* test_lf_disk_addressing_4() {
+	Disk disk = create_less_fragmented_disk();
+	mem_dump(disk.data_bitmap, "LF.bin");
+	disk.file = fopen("less_fragmented.bin", "r+");
+
+	const int allocation_size = 64 * 64 * 64;
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+
+	Inode inode = {0};
+	int ret = stream_write_addresses(&disk, &inode, *addresses);
+	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+
+	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] file disk addressing less fragmented 4: not equal pre/post serialization", res);
+
+	mem_free(disk.data_bitmap);
+	fclose(disk.file);
+
+	return 0;
+}
+
+
+
 
 static char* test_file_disk_addressssing() {
 	Disk disk = create_fragmented_disk();
@@ -987,6 +1136,9 @@ static char* test_bitmap_io() {
 
 }
 
+
+
+
 static char* all_tests() {
 	mu_run_test(test_write_data_to_disk_2);
 	mu_run_test(test_superblock_serialization);
@@ -1009,6 +1161,10 @@ static char* all_tests() {
 	mu_run_test(test_file_disk_addressing_3);
 	mu_run_test(test_file_disk_addressing_4);
 	mu_run_test(test_file_disk_addressing_5);
+	mu_run_test(test_lf_disk_addressing);
+	mu_run_test(test_lf_disk_addressing_2);
+	mu_run_test(test_lf_disk_addressing_3);
+	mu_run_test(test_lf_disk_addressing_4);
 	//mu_run_test(test_inode_serialization);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
