@@ -263,6 +263,29 @@ static char* test_file_disk_addressing_3() {
 	return 0;
 }
 
+static char* test_file_disk_addressing_4() {
+	Inode inode = {0};
+	// Partway though the first double block
+	const int allocation_size = 6 + 64 + 64 * 38;
+	int ret = 0;
+	Disk disk = create_fragmented_disk();
+	disk.file = fopen("fragmented.bin", "r+");
+	disk.superblock.num_used_blocks = disk.superblock.num_data_blocks - 5;
+
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+
+	stream_write_addresses(&disk, &inode, *addresses);
+	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+
+	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] file disk addressing 4: not equal pre/post serialization", res);
+
+	mem_free(disk.data_bitmap);
+	fclose(disk.file);
+	return 0;
+}
+
 
 static char* test_disk_io() {
 	Disk disk = { 0 };
@@ -961,6 +984,7 @@ static char* all_tests() {
 	mu_run_test(test_read_from_disk_by_seq);
 	mu_run_test(test_file_disk_addressing_2);
 	mu_run_test(test_file_disk_addressing_3);
+	mu_run_test(test_file_disk_addressing_4);
 
 	//mu_run_test(test_inode_serialization);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
