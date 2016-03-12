@@ -1,7 +1,7 @@
 C_FILES := $(shell find src -name '*.c')
 C_FILES += $(shell find ../core/src -name '*.c')
 OBJ_FILES := $(addprefix obj/,$(notdir $(C_FILES:.c=.o)))
-LD_FLAGS := -g -lpthread -lm -Wno-unused-value -Wall -Wextra -pedantic -D DEBUG
+LD_FLAGS := -g -lpthread -lm 
 CC_FLAGS := -g -Wno-unused-value -Werror -D DEBUG
 #COMPILER = gcc -std=c99 -pg
 COMPILER = clang-3.5
