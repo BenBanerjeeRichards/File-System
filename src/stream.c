@@ -42,6 +42,13 @@ int _stream_write_address_level(Disk disk, BlockSequence* inode_data, LList addr
 int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	int ret = SUCCESS;
 
+	// Append on a zero block sequence to the de serailization functino
+	// (stream_read_addresses) knows when to stop reading (otherwise will
+	// just start reading garbage).
+	BlockSequence* zero = malloc(sizeof(zero));
+	memset(zero, 0, sizeof(BlockSequence));
+	llist_insert(&addresses, zero);
+
 	// Write directs to the inode
 	LListNode* current = addresses.head;
 	int num_directs = addresses.num_elements < DIRECT_BLOCK_NUM ? addresses.num_elements : DIRECT_BLOCK_NUM;
@@ -93,7 +100,8 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	}
 
 	_stream_write_address_level(*disk, &inode->data.triple_indirect, *remaining_double_indirects, &triple_indirect_addresses, &triple_indirect_data);
-	if (triple_indirect_addresses->num_elements > 1) {
+	if (triple_indirect_addresses->num_elements > 2) {
+		// Note that this is not 1 - we add a zero block sequence at the beginning.
 		return ERR_DISK_FULL;
 	}
 	ret = fs_write_data_to_disk(disk, triple_indirect_data, *triple_indirect_addresses, true);
@@ -218,6 +226,9 @@ LList stream_read_addresses(Disk disk, Inode inode, int* error) {
 		return *addresses;
 	}
 
+	llist_append(addresses, *indirect_sequences);
+
+
 	if (block_seq_is_empty(inode.data.double_indirect)) {
 		*error = SUCCESS;
 		return *addresses;
@@ -230,6 +241,8 @@ LList stream_read_addresses(Disk disk, Inode inode, int* error) {
 		*error = ret;
 		return *addresses;
 	}
+
+	llist_append(addresses, *double_indirect_sequences);
 
 	if (block_seq_is_empty(inode.data.triple_indirect)) {
 		*error = SUCCESS;
@@ -244,9 +257,6 @@ LList stream_read_addresses(Disk disk, Inode inode, int* error) {
 		return *addresses;
 	}
 
-	// TODO fix error codes with llist
-	llist_append(addresses, *indirect_sequences);
-	llist_append(addresses, *double_indirect_sequences);
 	llist_append(addresses, *triple_indirect_sequences);
 	
 	free(indirect_sequences);
