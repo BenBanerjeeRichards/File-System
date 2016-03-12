@@ -14,8 +14,6 @@
 
 int tests_run = 0;
 
-
-
 Disk create_fragmented_disk() {
 	const int size = MEGA * 310;	// ** Needs new disk IMPORTANT 
 	Disk disk = { 0 };
@@ -221,16 +219,10 @@ static char* test_file_disk_addressssing() {
 
 	LList all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	LListNode* current_a = all_addresses.head;
-	for (int i = 0; i < addresses->num_elements; i++) {
-		int location = 2 * i + 1;	// Odd numbers for start_addr
-		BlockSequence* seq = current_a->element;
-		//printf("%i\n", seq->start_addr);
-		mu_assert("[MinUnit][TEST] file disk addressing: incorrect start address", seq->start_addr == location);
-		mu_assert("[MinUnit][TEST] file disk addressing: incorrect length", seq->length == 1);
-		current_a = current_a->next;
-	}
+	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] file disk addressing: not equal pre/post serialization", res);
 
+	// TODO fix this double free
 	//llist_free(&all_addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
@@ -916,11 +908,9 @@ static char* test_bitmap_io() {
 
 static char* all_tests() {
 	mu_run_test(test_write_data_to_disk_2);
-
 	mu_run_test(test_superblock_serialization);
 	mu_run_test(test_superblock_calculations);
 	mu_run_test(test_bitmap_io);
-	//mu_run_test(test_inode_serialization);
 	mu_run_test(test_directory_get_inode_number);
 	mu_run_test(test_directory_add_entry);
 	mu_run_test(test_find_continuous_bitmap_run);
@@ -928,13 +918,16 @@ static char* all_tests() {
 	mu_run_test(test_find_next_bitmap_block);
 	mu_run_test(test_alloc_blocks_continuous);
 	mu_run_test(test_find_continuous_bitmap_run_2);
-	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 	mu_run_test(test_write_data_to_disk);
 	mu_run_test(test_disk_io);
 	mu_run_test(test_disk_io_2);
 	mu_run_test(test_file_disk_addressssing);
 	mu_run_test(test_div_round_up);
 	mu_run_test(test_read_from_disk_by_seq);
+
+	//mu_run_test(test_inode_serialization);
+	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
+
 	return 0;
 }
 

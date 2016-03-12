@@ -3,6 +3,7 @@
 
 #include "fs.h"
 #include "memory.h"
+bool compare_block_sequence(void* el_1, void* el_2);
 
 uint32_t round_up_nearest_multiple(uint32_t, uint32_t);
 int div_round_up(int a, int b);

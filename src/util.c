@@ -8,6 +8,13 @@
 #include "util.h"
 #include "constants.h"
 
+
+bool compare_block_sequence(void* el_1, void* el_2) {
+	BlockSequence* b1 = el_1;
+	BlockSequence* b2 = el_2;
+	return (b1->start_addr == b2->start_addr && b1->length == b2->length);
+}
+
 void util_print_block_seq_list(LList list) {
 	LListNode* current = list.head;
 	for (int i = 0; i < list.num_elements; i++) {
