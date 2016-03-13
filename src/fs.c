@@ -136,8 +136,14 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_
 		ret = mem_alloc(&section, seq->length * BLOCK_SIZE);
 		if (ret != SUCCESS) return ret;
 
-		memcpy(section.data, &data.data[blocks_written * BLOCK_SIZE], BLOCK_SIZE * seq->length);
+		//printf("%i,%i\n", blocks_written, data.size);
+		if(blocks_written == 3976) {
+			mem_dump(disk->data_bitmap, "THE BITMP.bin");
+			printf("Decided not to write\n");
+			return 0;
+		}
 
+		memcpy(section.data, &data.data[blocks_written * BLOCK_SIZE], BLOCK_SIZE * seq->length);
 		if (!data_block) {
 			ret = disk_write(disk, seq->start_addr * BLOCK_SIZE, section);
 		}
