@@ -84,6 +84,8 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	if (ret != SUCCESS) return ret;
 
 	if (remaining_indirects->num_elements == 0) {
+		llist_free(remaining_indirects);
+		mem_free(indirect_data);
 		return SUCCESS;
 	}
 
@@ -96,6 +98,9 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	if (ret != SUCCESS) return ret;
 
 	if (remaining_double_indirects->num_elements == 0) {
+		llist_free(remaining_double_indirects);
+		mem_free(double_indirect_data);
+		mem_free(indirect_data);
 		return SUCCESS;
 	}
 
@@ -106,6 +111,13 @@ int stream_write_addresses(Disk* disk, Inode* inode, LList addresses){
 	}
 	ret = fs_write_data_to_disk(disk, triple_indirect_data, *triple_indirect_addresses, true);
 	if (ret != SUCCESS) return ret;
+
+	mem_free(triple_indirect_data);
+	mem_free(double_indirect_data);
+	mem_free(indirect_data);
+
+	llist_free(remaining_double_indirects);
+	llist_free(remaining_indirects);
 
 	return SUCCESS;
 }
@@ -138,6 +150,7 @@ LList* stream_read_address_block(Disk disk, BlockSequence block, int* error) {
 
 		llist_insert(addresses, seq);
 	}
+	mem_free(data);
 
 	return addresses;
 }
@@ -159,8 +172,8 @@ int stream_double_to_block_seq(Disk disk, BlockSequence double_indirect, LList**
 		LList* indirects = stream_read_address_block(disk, *indirect_addr, &ret);
 		if (ret != SUCCESS) return ret;
 
-		llist_append(*addresses, *indirects);
-		free(indirects);	// TODO fix this
+		append_block_sequence_lists(*addresses, *indirects);
+		llist_free(indirects);	// TODO fix this
 		current = current->next;
 	}
 
@@ -187,51 +200,52 @@ int stream_triple_to_block_seq(Disk disk, BlockSequence triple_indirect, LList**
 		ret = stream_double_to_block_seq(disk, *double_indirect_addr, &block_sequences);
 		if (ret != SUCCESS) return ret;
 
-		ret = llist_append(*addresses, *block_sequences);
-		if (ret != SUCCESS) return ret;
-		free(block_sequences);
+		append_block_sequence_lists(*addresses, *block_sequences);
+		llist_free(block_sequences);
 		current = current->next;
 	}
 
 	return SUCCESS;
 }
 
-LList stream_read_addresses(Disk disk, Inode inode, int* error) {
+LList* stream_read_addresses(Disk disk, Inode inode, int* error) {
 	int ret = 0;
 	LList* addresses = llist_new();
-	addresses->free_element = &free_element_standard;
+	addresses->free_element = &free_element_bl_debug;
+
 
 	// Add directs
 	for (int i = 0; i < DIRECT_BLOCK_NUM; i++) {
 		if(block_seq_is_empty(inode.data.direct[i])) {
 			*error = SUCCESS;
-			return *addresses;
+			return addresses;
 		}
 
 		ret = llist_insert(addresses, &inode.data.direct[i]);
 		if (ret != SUCCESS) {
 			*error = ret;
-			return *addresses;
+			return addresses;
 		}
 	}
 
 	if (block_seq_is_empty(inode.data.indirect)) {
 		*error = SUCCESS;
-		return *addresses;
+		return addresses;
 	}
 
 	LList* indirect_sequences = stream_read_address_block(disk, inode.data.indirect, &ret);
 	if (ret != SUCCESS) {
 		*error = ret;
-		return *addresses;
+		return addresses;
 	}
 
-	llist_append(addresses, *indirect_sequences);
+	append_block_sequence_lists(addresses, *indirect_sequences);
 
 
 	if (block_seq_is_empty(inode.data.double_indirect)) {
+		llist_free(indirect_sequences);
 		*error = SUCCESS;
-		return *addresses;
+		return addresses;
 	}
 
 
@@ -239,14 +253,16 @@ LList stream_read_addresses(Disk disk, Inode inode, int* error) {
 	ret = stream_double_to_block_seq(disk, inode.data.double_indirect, &double_indirect_sequences);
 	if (ret != SUCCESS) {
 		*error = ret;
-		return *addresses;
+		return addresses;
 	}
 
-	llist_append(addresses, *double_indirect_sequences);
+	append_block_sequence_lists(addresses, *double_indirect_sequences);
 
 	if (block_seq_is_empty(inode.data.triple_indirect)) {
+		llist_free(indirect_sequences);
+		llist_free(double_indirect_sequences);
 		*error = SUCCESS;
-		return *addresses;
+		return addresses;
 	}
 
 
@@ -254,14 +270,14 @@ LList stream_read_addresses(Disk disk, Inode inode, int* error) {
 	ret = stream_triple_to_block_seq(disk, inode.data.triple_indirect, &triple_indirect_sequences);
 	if (ret != SUCCESS) {
 		*error = ret;
-		return *addresses;
+		return addresses;
 	}
 
-	llist_append(addresses, *triple_indirect_sequences);
-	
-	free(indirect_sequences);
-	free(double_indirect_sequences);
-	free(triple_indirect_sequences);
+	append_block_sequence_lists(addresses, *triple_indirect_sequences);
 
-	return *addresses;
+	llist_free(indirect_sequences);
+	llist_free(double_indirect_sequences);
+	llist_free(triple_indirect_sequences);
+
+	return addresses;
 }

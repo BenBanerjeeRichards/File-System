@@ -3,6 +3,9 @@
 
 #include "fs.h"
 #include "memory.h"
+
+void append_block_sequence_lists(LList* parent, LList sublist);
+
 bool compare_block_sequence(void* el_1, void* el_2);
 
 uint32_t round_up_nearest_multiple(uint32_t, uint32_t);
@@ -25,4 +28,6 @@ uint32_t util_read_uint32(HeapData, int, int*);
 uint64_t util_read_uint64(HeapData, int, int*);
 // Free callbacks 
 void free_element_standard(void* element);
+void free_element_bl_debug(void* element);
+
 #endif

@@ -238,7 +238,6 @@ static char* test_write_data_to_disk_2() {
 	
 	return 0;
 }
-
 static char* test_lf_disk_addressing() {
 	Disk disk = create_less_fragmented_disk();
 	mem_dump(disk.data_bitmap, "LF.bin");
@@ -250,13 +249,12 @@ static char* test_lf_disk_addressing() {
 
 	Inode inode = {0};
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing: not equal pre/post serialization", res);
 
-	// TODO fix this double free
-	//llist_free(&all_addresses);
+	// TODO fix  double free
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 
@@ -274,12 +272,13 @@ static char* test_lf_disk_addressing_2() {
 
 	Inode inode = {0};
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing less fragmented 1: not equal pre/post serialization", res);
 
 	//llist_free(&all_addresses);
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 
@@ -297,11 +296,12 @@ static char* test_lf_disk_addressing_3() {
 
 	Inode inode = {0};
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing less fragmented 3: not equal pre/post serialization", res);
-
+	
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 
@@ -319,11 +319,12 @@ static char* test_lf_disk_addressing_4() {
 
 	Inode inode = {0};
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing less fragmented 4: not equal pre/post serialization", res);
-
+	
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 
@@ -354,13 +355,14 @@ static char* test_file_disk_addressssing() {
 	Inode inode = { 0 };
 	int ret = stream_write_addresses(&disk, &inode, *addresses);
 
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing: not equal pre/post serialization", res);
 
 	// TODO fix this double free
 	//llist_free(&all_addresses);
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 
@@ -379,11 +381,12 @@ static char* test_file_disk_addressing_2() {
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
 	
 	stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing 2: not equal pre/post serialization", res);
-
+	
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 	return 0;
@@ -402,11 +405,13 @@ static char* test_file_disk_addressing_3() {
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
 
 	stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing 3: not equal pre/post serialization", res);
 
+
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 	return 0;
@@ -425,11 +430,13 @@ static char* test_file_disk_addressing_4() {
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
 
 	stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing 4: not equal pre/post serialization", res);
-
+	
+	llist_free(all_addresses);
+	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 	return 0;
@@ -448,11 +455,13 @@ static char* test_file_disk_addressing_5() {
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
 
 	stream_write_addresses(&disk, &inode, *addresses);
-	LList all_addresses = stream_read_addresses(disk, inode, &ret);
+	LList* all_addresses = stream_read_addresses(disk, inode, &ret);
 
-	bool res = llist_is_equal(*addresses, all_addresses, &compare_block_sequence);
+	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing 5: not equal pre/post serialization", res);
-
+	
+	llist_free(addresses);
+	//llist_free(all_addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
 	return 0;
@@ -638,7 +647,6 @@ static char* test_alloc_blocks_continuous() {
 	BlockSequence* node = addresses->head->element;
 	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", node->start_addr == 256 * 8);
 
-	llist_free(addresses);	
 	mem_free(block_bitmap);
 	return 0;
 }
@@ -1154,7 +1162,7 @@ static char* all_tests() {
 	mu_run_test(test_write_data_to_disk);
 	mu_run_test(test_disk_io);
 	mu_run_test(test_disk_io_2);
-	mu_run_test(test_file_disk_addressssing);
+	//mu_run_test(test_file_disk_addressssing);
 	mu_run_test(test_div_round_up);
 	mu_run_test(test_read_from_disk_by_seq);
 	mu_run_test(test_file_disk_addressing_2);

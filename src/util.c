@@ -8,6 +8,17 @@
 #include "util.h"
 #include "constants.h"
 
+void append_block_sequence_lists(LList* parent, LList sublist) {
+	LListNode* current = sublist.head;
+	for(int i = 0; i < sublist.num_elements; i++) {
+		BlockSequence* seq = current->element;
+		BlockSequence* new_seq = malloc(sizeof(BlockSequence));
+		memcpy(new_seq, seq, sizeof(BlockSequence));
+		llist_insert(parent, new_seq);
+
+		current = current->next;
+	} 
+}
 
 bool compare_block_sequence(void* el_1, void* el_2) {
 	BlockSequence* b1 = el_1;
@@ -205,3 +216,7 @@ void free_element_standard(void* element) {
 	free(element);
 }
 
+void free_element_bl_debug(void* element) {
+	BlockSequence* seq = element;
+	free(seq);
+}
