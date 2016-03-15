@@ -373,7 +373,7 @@ static char* test_file_disk_addressing_2() {
 	int ret = 0;
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
-	disk.superblock.num_used_blocks = disk.superblock.num_data_blocks - 5;
+
 
 	LList* addresses;
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
@@ -396,7 +396,7 @@ static char* test_file_disk_addressing_3() {
 	int ret = 0;
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
-	disk.superblock.num_used_blocks = disk.superblock.num_data_blocks - 5;
+
 
 	LList* addresses;
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
@@ -419,7 +419,7 @@ static char* test_file_disk_addressing_4() {
 	int ret = 0;
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
-	disk.superblock.num_used_blocks = disk.superblock.num_data_blocks - 5;
+
 
 	LList* addresses;
 	fs_allocate_blocks(&disk, allocation_size, &addresses);
@@ -442,7 +442,7 @@ static char* test_file_disk_addressing_5() {
 	int ret = 0;
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
-	disk.superblock.num_used_blocks = disk.superblock.num_data_blocks - 5;
+
 
 	LList* addresses;
 	fs_allocate_blocks(&disk, allocation_size, &addresses);

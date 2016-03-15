@@ -75,6 +75,8 @@ int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 			bitmap_write(&disk->data_bitmap, i + run_start_bit, 1);
 		}
 
+		disk->superblock.num_used_blocks += length;
+
 		// Add allocation to LL
 		BlockSequence* seq = malloc(sizeof(BlockSequence));
 		seq->length = length;
@@ -110,6 +112,7 @@ int fs_allocate_blocks(Disk* disk, int num_blocks, LList** addresses) {
 
 			sb->data_bitmap_circular_loc = start_bit / 8;
 			bitmap_write_range(disk->data_bitmap, start_bit, num_blocks, 1);
+			sb->num_used_blocks += num_blocks;
 		}
 
 	}
