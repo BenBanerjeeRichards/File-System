@@ -42,6 +42,7 @@
 #define INODE_MAGIC 0x98765432
 #define CURRENT_FS_VERSION 0x0001
 #define INODE_FLAG_IS_DIR 0x1
+#define ASCII_FORWARD_SLASH 47
 
 #define FILESYSTEM_FILE_NAME "filesystem.bin"
 #endif

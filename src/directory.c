@@ -78,7 +78,7 @@ int dir_find_next_path_name(HeapData path, int start, HeapData* name) {
 		if (error != SUCCESS) return error;
 
 		// Check for forward slash
-		if (byte == 47) {
+		if (byte == ASCII_FORWARD_SLASH) {
 			break;
 		}
 
