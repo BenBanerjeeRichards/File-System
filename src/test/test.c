@@ -110,6 +110,64 @@ Disk create_less_fragmented_disk() {
 }
 
 
+static char* test_read_from_disk() {
+	const int size = MEGA;
+	const char* fname = "testread.bin";
+	int ret = 0;
+	Disk disk = {0};
+	Superblock sb = {0};
+	Bitmap data_bt = {0};
+	disk.superblock = sb;
+	disk.data_bitmap = data_bt;
+	disk.size = size;
+
+	fs_create_superblock(&disk.superblock, size);
+	disk_mount(&disk, fname);
+	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes + 1);
+
+	HeapData data_1 = {0};
+	HeapData data_2 = {0};
+	HeapData data_3 = {0};
+	mem_alloc(&data_1, BLOCK_SIZE);
+	mem_alloc(&data_2, BLOCK_SIZE);
+	mem_alloc(&data_3, BLOCK_SIZE);
+	memset(data_1.data, 0xAA, BLOCK_SIZE);
+	memset(data_2.data, 0xBB, BLOCK_SIZE);
+	memset(data_3.data, 0xCC, BLOCK_SIZE);
+	BlockSequence* seq_1 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq_2 = malloc(sizeof(BlockSequence));
+	BlockSequence* seq_3 = malloc(sizeof(BlockSequence));
+	LList* addresses = llist_new();
+	addresses->free_element = &free_element_standard;
+
+	seq_1->start_addr = 4;
+	seq_2->start_addr = 10;
+	seq_3->start_addr = 1000;
+	seq_1->length = 1;
+	seq_2->length = 1;
+	seq_3->length = 1;
+	llist_insert(addresses, seq_1);
+	llist_insert(addresses, seq_2);
+	llist_insert(addresses, seq_3);
+
+	HeapData data = {0};
+	mem_alloc(&data, 3 * BLOCK_SIZE);
+	memcpy(data.data, data_1.data, BLOCK_SIZE);
+	memcpy(&data.data[BLOCK_SIZE], data_2.data, BLOCK_SIZE);
+	memcpy(&data.data[BLOCK_SIZE * 2], data_3.data, BLOCK_SIZE);
+
+	fs_write_data_to_disk(&disk, data, *addresses, true);
+	HeapData read = fs_read_from_disk(disk, *addresses, true, &ret);
+	int cmp = memcmp(data.data, read.data, read.size);
+	mu_assert("[MinUnit][TEST] read data from disk: comparison failed", cmp == 0);
+
+	llist_free(addresses);
+	mem_free(disk.data_bitmap);
+	disk_unmount(disk);
+	disk_remove(fname);
+	return 0;
+}
+
 static char* test_read_from_disk_by_seq() {
 	Disk disk = { 0 };
 	Superblock sb = { 0 };
@@ -360,7 +418,7 @@ static char* test_file_disk_addressssing() {
 	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing: not equal pre/post serialization", res);
 
-	// TODO fix this double free
+	// TODO fix this invalid free
 	//llist_free(&all_addresses);
 	llist_free(addresses);
 	mem_free(disk.data_bitmap);
@@ -435,7 +493,6 @@ static char* test_file_disk_addressing_4() {
 	bool res = llist_is_equal(*addresses, *all_addresses, &compare_block_sequence);
 	mu_assert("[MinUnit][TEST] file disk addressing 4: not equal pre/post serialization", res);
 	
-	llist_free(all_addresses);
 	llist_free(addresses);
 	mem_free(disk.data_bitmap);
 	fclose(disk.file);
@@ -943,6 +1000,7 @@ static char* test_directory_get_inode_number() {
 	int ret = dir_get_inode_number(directory, invalid, &inode_number);
 	mu_assert("[MinUnit][FAIL] directory get inode: expected inode not found error", ret == ERR_INODE_NOT_FOUND);
 
+	mem_dump(directory, "dir.bin");
 
 	mem_free(entry1.name);
 	mem_free(entry2.name);
@@ -1162,7 +1220,7 @@ static char* all_tests() {
 	mu_run_test(test_write_data_to_disk);
 	mu_run_test(test_disk_io);
 	mu_run_test(test_disk_io_2);
-	//mu_run_test(test_file_disk_addressssing);
+	mu_run_test(test_file_disk_addressssing);
 	mu_run_test(test_div_round_up);
 	mu_run_test(test_read_from_disk_by_seq);
 	mu_run_test(test_file_disk_addressing_2);
@@ -1173,6 +1231,7 @@ static char* all_tests() {
 	mu_run_test(test_lf_disk_addressing_2);
 	mu_run_test(test_lf_disk_addressing_3);
 	mu_run_test(test_lf_disk_addressing_4);
+	mu_run_test(test_read_from_disk);
 	//mu_run_test(test_inode_serialization);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 

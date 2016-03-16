@@ -180,3 +180,33 @@ HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, bool data_b
 		return data;
 	}
 }
+HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* error) {
+	HeapData data = {0};
+
+	if(addresses.num_elements <= 0) {
+		*error = SUCCESS;		// Should this return a non zero value?
+		return data;
+	}
+
+	LListNode* current = addresses.head;
+	for(int i = 0; i < addresses.num_elements; i++) {
+		BlockSequence* seq = current->element;
+		HeapData read = fs_read_from_disk_by_sequence(disk, *seq, data_block, error);
+		if(*error != SUCCESS) return data;
+		int read_mem_start = 0;
+
+		// Add read data to data
+		if(!data.valid) {
+			mem_alloc(&data, read.size);
+			memcpy(data.data, read.data, read.size);
+		} else {
+			read_mem_start = data.size;
+			mem_realloc(&data, data.size + read.size);
+			memcpy(&data.data[read_mem_start], read.data, read.size);
+		}
+
+		current = current->next;
+	}
+
+	return data;
+}
