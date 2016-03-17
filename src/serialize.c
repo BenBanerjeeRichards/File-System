@@ -169,7 +169,7 @@ int unserialize_superblock(HeapData* data, Superblock* superblock){
 	return SUCCESS;
 }
 
-/*
+
 int serialize_inode(HeapData* data, Inode inode) {
 	int error = 0;
 	int location_count = 0;
@@ -212,18 +212,33 @@ int serialize_inode(HeapData* data, Inode inode) {
 	if (error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
-	error = util_write_uint32(data, location_count, inode.data.indirect);
+
+
+	error = util_write_uint32(data, location_count, inode.data.indirect.start_addr);
 	if (error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
-	error = util_write_uint32(data, location_count, inode.data.double_indirect);
-	if (error != SUCCESS) return error;
+	error = util_write_uint32(data, location_count, inode.data.indirect.length);
+	if(error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
-	error = util_write_uint32(data, location_count, inode.data.triple_indirect);
-	if (error != SUCCESS) return error;
+	error = util_write_uint32(data, location_count, inode.data.double_indirect.start_addr);
+	if(error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
+	error = util_write_uint32(data, location_count, inode.data.double_indirect.length);
+	if(error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+
+	error = util_write_uint32(data, location_count, inode.data.triple_indirect.start_addr);
+	if(error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+
+	error = util_write_uint32(data, location_count, inode.data.triple_indirect.length);
+	if(error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+	
+	
 	for (int i = 0; i < DIRECT_BLOCK_NUM; i++) {
 		error = util_write_uint32(data, location_count, inode.data.direct[i].start_addr);
 		if (error != SUCCESS) return error;
@@ -279,17 +294,32 @@ int unserialize_inode(HeapData* data, Inode* inode) {
 	if (error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
-	inode->data.indirect = util_read_uint32(*data, location_count, &error);
+
+	inode->data.indirect.start_addr = util_read_uint32(*data, location_count, &error);
 	if (error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
-	inode->data.double_indirect = util_read_uint32(*data, location_count, &error);
-	if (error != SUCCESS) return error;
+	inode->data.indirect.length = util_read_uint32(*data, location_count, &error);
+	if(error != SUCCESS) return error;
 	location_count += INCREMENT_32;
 
-	inode->data.triple_indirect = util_read_uint32(*data, location_count, &error);
-	if (error != SUCCESS) return error;
+	inode->data.double_indirect.start_addr = util_read_uint32(*data, location_count, &error);
+	if(error != SUCCESS) return error;
 	location_count += INCREMENT_32;
+
+	inode->data.double_indirect.length = util_read_uint32(*data, location_count, &error);
+	if(error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+
+	inode->data.triple_indirect.start_addr = util_read_uint32(*data, location_count, &error);
+	if(error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+
+	inode->data.triple_indirect.length = util_read_uint32(*data, location_count, &error);
+	if(error != SUCCESS) return error;
+	location_count += INCREMENT_32;
+
+
 
 	for (int i = 0; i < DIRECT_BLOCK_NUM; i++) {
 		inode->data.direct[i].start_addr = util_read_uint32(*data, location_count, &error);
@@ -303,4 +333,3 @@ int unserialize_inode(HeapData* data, Inode* inode) {
 
 	return SUCCESS;
 }
-*/

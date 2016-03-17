@@ -109,6 +109,108 @@ Disk create_less_fragmented_disk() {
 	return disk;
 }
 
+static char* test_write_inode() {
+	const int size = MEGA;
+	const char* fname = "testinode.bin";
+	int ret = 0;
+
+	Disk disk = {0};
+	Superblock sb = {0};
+	Bitmap data_bt = {0};
+
+	disk.superblock = sb;
+	disk.data_bitmap = data_bt;
+	disk.size = size;
+
+	fs_create_superblock(&disk.superblock, size);
+	disk_mount(&disk, fname);
+	mem_alloc(&disk.inode_bitmap, disk.superblock.inode_bitmap_size_bytes);
+
+	Inode inode_1 = {0};
+	Inode inode_2 = {0};
+	Inode inode_3 = {0};
+	
+	inode_1.magic = inode_2.magic = inode_3.magic = INODE_MAGIC;
+	
+	inode_1.time_created = 123456789;
+	inode_2.time_created = 987654321;
+	inode_3.time_created = 657483929;
+
+	inode_1.time_last_modified = 65465452;
+	inode_2.time_last_modified = 34534856;
+	inode_3.time_last_modified = 74136955;
+
+	inode_1.flags = 23;
+	inode_2.flags = 123982;
+	inode_3.flags = 123;
+
+	inode_1.gid = 1;
+	inode_2.gid = 2;
+	inode_3.gid = 3;
+
+	inode_1.uid = 4;
+	inode_2.uid = 5;
+	inode_3.uid = 5;
+
+	inode_1.preallocation_size = 64;
+	inode_2.preallocation_size = 65;
+	inode_3.preallocation_size = 66;
+
+	inode_1.size = 23;
+	inode_2.size = 523;
+	inode_3.size = 12309;
+
+	inode_1.data.direct[0].start_addr = 123480973;
+	inode_1.data.direct[1].start_addr = 90862343;
+	inode_1.data.direct[2].start_addr = 20347563;
+	inode_1.data.direct[3].start_addr = 674839201;
+	inode_1.data.direct[4].start_addr = 394094538;
+	inode_1.data.direct[5].start_addr = 758390124;
+
+	inode_1.data.direct[0].length = 230847234;
+	inode_1.data.direct[1].length = 982348672;
+	inode_1.data.direct[2].length = 495873234;
+	inode_1.data.direct[3].length = 789234873;
+	inode_1.data.direct[4].length = 91283445;
+	inode_1.data.direct[5].length = 294723485;
+
+	int num = 0;
+	fs_write_inode(disk, inode_1, &num);
+	mu_assert("[MinUnit][TEST] write inode: incorrect inode number [1]", num == 0);
+	
+	fs_write_inode(disk, inode_2, &num);
+	mu_assert("[MinUnit][TEST] write inode: incorrect inode number [2]", num == 1);
+
+	fs_write_inode(disk, inode_3, &num);
+	mu_assert("[MinUnit][TEST] write inode: incorrect inode number [3]", num == 2);
+
+	HeapData inode_read_1_data = disk_read(disk, disk.superblock.inode_table_start_addr * BLOCK_SIZE, INODE_SIZE, &ret);
+	HeapData inode_read_2_data = disk_read(disk, (disk.superblock.inode_table_start_addr + INODE_SIZE) * BLOCK_SIZE, INODE_SIZE, &ret);
+	HeapData inode_read_3_data = disk_read(disk, (disk.superblock.inode_table_start_addr + 2 * INODE_SIZE) * BLOCK_SIZE, INODE_SIZE, &ret);
+
+	Inode inode_read_1 = {0};
+	Inode inode_read_2 = {0};
+	Inode inode_read_3 = {0};
+
+	unserialize_inode(&inode_read_1_data, &inode_read_1);
+	unserialize_inode(&inode_read_1_data, &inode_read_2);
+	unserialize_inode(&inode_read_1_data, &inode_read_3);
+
+	int cmp = compare_inode(inode_1, inode_read_1);
+	mu_assert("[MinUnit][TEST] write inode: inode does not match unserialized inode [1]", cmp == 0);
+	
+	cmp = compare_inode(inode_1, inode_read_1);
+	mu_assert("[MinUnit][TEST] write inode: inode does not match unserialized inode [2]", cmp == 0);
+	
+	cmp = compare_inode(inode_1, inode_read_1);
+	mu_assert("[MinUnit][TEST] write inode: inode does not match unserialized inode [3]", cmp == 0);
+
+	disk_unmount(disk);
+	remove(fname);
+
+	return 0;
+}
+
 
 static char* test_read_from_disk() {
 	const int size = MEGA;
@@ -1238,6 +1340,7 @@ static char* all_tests() {
 	mu_run_test(test_lf_disk_addressing_4);
 	mu_run_test(test_read_from_disk);
 	mu_run_test(test_inode_serialization);
+	mu_run_test(test_write_inode);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;

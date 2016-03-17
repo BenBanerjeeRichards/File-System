@@ -8,6 +8,7 @@
 #include "fs.h"
 #include "util.h"
 #include "stream.h"
+#include "serialize.h"
 #include "../../core/src/llist.h"
 
 
@@ -209,4 +210,34 @@ HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* err
 	}
 
 	return data;
+}
+
+int fs_write_inode(Disk disk, Inode inode, int* inode_number) {
+	// Find free inode on disk
+	const int start = 0;	// TODO set this correctly
+	int block_addr = 0;
+	int ret = 0;
+
+	ret = bitmap_find_block(disk.inode_bitmap, start, &block_addr);
+	if(ret != SUCCESS) return ret;
+
+	*inode_number = block_addr;
+
+	// Serialize inode
+	HeapData inode_data = {0};
+	mem_alloc(&inode_data, INODE_SIZE);
+	ret = serialize_inode(&inode_data, inode);
+
+	// Write inode to disk
+	const int inode_per_block = BLOCK_SIZE / INODE_SIZE;
+	const double table_addr = (double)block_addr / (double)inode_per_block;
+	const double disk_addr = disk.superblock.inode_table_start_addr + table_addr;
+	const int disk_offset_bytes = disk_addr * BLOCK_SIZE;
+
+	ret = disk_write(&disk, disk_offset_bytes, inode_data);
+	if(ret != SUCCESS) return ret;
+
+	// Update bitmap
+	bitmap_write(&disk.inode_bitmap, block_addr, 1);
+	return SUCCESS;
 }
