@@ -1080,9 +1080,14 @@ static char* test_inode_serialization() {
 	inode.data.direct[5].length = 294723485;
 
 
-	inode.data.indirect =  238746910;
-	inode.data.double_indirect = 5367283;
-	inode.data.triple_indirect = 12655493;
+	inode.data.indirect.length = 91238234;
+	inode.data.indirect.start_addr =  12839782;
+
+	inode.data.indirect.length = 293754239;
+	inode.data.indirect.start_addr = 5620234;
+
+	inode.data.indirect.length = 52349843;
+	inode.data.indirect.start_addr = 4984234;
 
 	HeapData data;
 	mem_alloc(&data, INODE_SIZE);
@@ -1232,7 +1237,7 @@ static char* all_tests() {
 	mu_run_test(test_lf_disk_addressing_3);
 	mu_run_test(test_lf_disk_addressing_4);
 	mu_run_test(test_read_from_disk);
-	//mu_run_test(test_inode_serialization);
+	mu_run_test(test_inode_serialization);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;
