@@ -270,7 +270,7 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 	return SUCCESS;
 } 
 
-Disk fs_create_filesystem(const char* name, int size) {
+Disk fs_create_filesystem(const char* name, int size, int* error) {
 	Disk disk = {0};
 	Superblock sb = {0};
 	Bitmap data_bt = {0};
@@ -281,10 +281,29 @@ Disk fs_create_filesystem(const char* name, int size) {
 	disk.inode_bitmap = inode_bt;
 	disk.size = size;
 
-	fs_create_superblock(&disk.superblock, size);
-	disk_mount(&disk, name);
-	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes);
-	mem_alloc(&disk.inode_bitmap, disk.superblock.inode_bitmap_size_bytes);
+	int ret = fs_create_superblock(&disk.superblock, size);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return disk;
+	}
+
+	ret = disk_mount(&disk, name);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return disk;
+	}
+
+	ret = mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return disk;
+	}
+
+	ret = mem_alloc(&disk.inode_bitmap, disk.superblock.inode_bitmap_size_bytes);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return disk;
+	}
 
 	return disk;
 }
