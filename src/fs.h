@@ -149,6 +149,8 @@ int fs_allocate_blocks(Disk*, int, LList**);
 int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_block);
 int fs_write_inode(Disk disk, Inode inode, int* inode_number);
 int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number);
+Disk fs_create_filesystem(const char* name, int size);
+
 HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* error);
 HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, bool data_block, int* error);
 HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* error);

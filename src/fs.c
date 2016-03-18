@@ -269,3 +269,23 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 	*inode_number = inode_num;
 	return SUCCESS;
 } 
+
+Disk fs_create_filesystem(const char* name, int size) {
+	Disk disk = {0};
+	Superblock sb = {0};
+	Bitmap data_bt = {0};
+	Bitmap inode_bt = {0};
+
+	disk.superblock = sb;
+	disk.data_bitmap = data_bt;
+	disk.inode_bitmap = inode_bt;
+	disk.size = size;
+
+	fs_create_superblock(&disk.superblock, size);
+	disk_mount(&disk, name);
+	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes);
+	mem_alloc(&disk.inode_bitmap, disk.superblock.inode_bitmap_size_bytes);
+
+	return disk;
+}
+
