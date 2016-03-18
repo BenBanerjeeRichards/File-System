@@ -241,3 +241,30 @@ int fs_write_inode(Disk disk, Inode inode, int* inode_number) {
 	bitmap_write(&disk.inode_bitmap, block_addr, 1);
 	return SUCCESS;
 }
+
+int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
+	/*
+		1) Allocate space on the disk to store the data
+		2) Write the disk data to the disk
+		3) Write the addresses to the inode and disk
+		4) Write the inode to the disk
+	*/
+
+	int ret = 0;
+	
+	LList* addresses;
+	ret = fs_allocate_blocks(disk, data.size / BLOCK_SIZE, &addresses);
+	if(ret != SUCCESS) return ret;
+
+	ret = fs_write_data_to_disk(disk, data, *addresses, true);
+	if(ret != SUCCESS) return ret;
+
+	ret = stream_write_addresses(disk, inode, *addresses);
+	if(ret != SUCCESS) return ret;
+
+	int inode_num = 0;
+	ret = fs_write_inode(*disk, *inode, &inode_num);
+
+	*inode_number = inode_num;
+	return SUCCESS;
+} 
