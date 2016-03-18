@@ -211,6 +211,112 @@ static char* test_write_inode() {
 	return 0;
 }
 
+static char* test_directory_traversal() {
+	const int size = MEGA;
+	const char* fname = "testtrav.bin";
+	int ret = 0;
+
+	Disk disk = {0};
+	Superblock sb = {0};
+	Bitmap data_bt = {0};
+	
+	disk.superblock = sb;
+	disk.data_bitmap = data_bt;
+	disk.size = size;
+
+	fs_create_superblock(&disk.superblock, size);
+	disk_mount(&disk, fname);
+	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes);
+	mem_alloc(&disk.inode_bitmap, disk.superblock.inode_bitmap_size_bytes);
+
+	Directory root = {0};
+	Directory test_dir_a = {0};
+	Directory test_sub_a = {0};
+
+	Inode root_inode = {0};
+	Inode test_dir_a_inode = {0};
+	Inode test_sub_a_inode = {0};
+	Inode testfile_a_inode = {0};
+	Inode testfile_b_inode = {0};
+
+	root_inode.flags &= INODE_FLAG_IS_DIR;
+	test_dir_a_inode.flags &= INODE_FLAG_IS_DIR;
+	test_sub_a_inode.flags &= INODE_FLAG_IS_DIR;
+
+	DirectoryEntry test_dir_a_entry = {0};
+	DirectoryEntry test_sub_a_entry = {0};
+	DirectoryEntry testfile_a_entry = {0};
+	DirectoryEntry testfile_b_entry = {0};
+
+	HeapData test_dir_a_name = {0};
+	HeapData test_sub_a_name = {0};
+	HeapData testfile_a_name = {0};
+	HeapData testfile_b_name = {0};
+
+	util_string_to_heap("test dir A", &test_dir_a_name);
+	util_string_to_heap("test sub dir A", &test_sub_a_name);
+	util_string_to_heap("Test File A.txt", &testfile_a_name);
+	util_string_to_heap("Test File B.txt", &testfile_b_name);
+
+	test_dir_a_entry.inode_number = 1;
+	test_sub_a_entry.inode_number = 2;
+	testfile_a_entry.inode_number = 3;
+	testfile_b_entry.inode_number = 50;
+
+	test_dir_a_entry.name = test_dir_a_name;
+	test_sub_a_entry.name = test_sub_a_name;
+	testfile_a_entry.name = testfile_a_name;
+	testfile_b_entry.name = testfile_b_name;
+
+	dir_add_entry(&root, test_dir_a_entry);
+	dir_add_entry(&test_dir_a, test_sub_a_entry);
+	dir_add_entry(&test_sub_a, testfile_a_entry);
+	dir_add_entry(&test_sub_a, testfile_b_entry);
+	
+	root_inode.size = root.size;
+	test_dir_a_inode.size = test_dir_a.size;
+	testfile_a_inode.size = 0;
+	testfile_b_inode.size = 0;
+	root_inode.magic = INODE_MAGIC;
+	test_dir_a_inode.magic = INODE_MAGIC;
+	testfile_a_inode.magic = INODE_MAGIC;
+	test_sub_a_inode.magic = INODE_MAGIC;
+
+	int num = 0;
+	// Write directories to disk (directories are just special files)
+	ret = 0;
+	ret += fs_write_file(&disk, &root_inode, root, &num);
+	ret += fs_write_file(&disk, &test_dir_a_inode, test_dir_a, &num);
+	test_sub_a_entry.inode_number = num;
+	ret += fs_write_file(&disk, &test_sub_a_inode, test_sub_a, &num);
+	testfile_a_entry.name = testfile_a_name;
+
+	HeapData path_1 = {0};
+	HeapData path_2 = {0};
+
+	util_string_to_heap("test dir A/test sub dir A", &path_1);
+	util_string_to_heap("test dir A/test sub dir A/Test File B.txt", &path_2);
+
+	DirectoryEntry directory_1;
+	ret = dir_get_directory(disk, path_1, root, &directory_1);
+	mu_assert("[MinUnit][TEST] test directory traversal: incorrect inode number [1]", directory_1.inode_number == 2);
+	DirectoryEntry directory_2;
+	dir_get_directory(disk, path_2, root, &directory_2);
+	mu_assert("[MinUnit][TEST] test directory traversal: incorrect inode number [2]", directory_2.inode_number == 50);
+
+
+
+	disk_unmount(disk);
+	disk_remove(fname);
+	// TODO free directories
+	mem_free(test_dir_a);
+	mem_free(testfile_a_name);
+	mem_free(testfile_b_name);
+	mem_free(disk.inode_bitmap);
+	mem_free(disk.data_bitmap);
+	return 0;
+}
+
 
 static char* test_read_from_disk() {
 	const int size = MEGA;
@@ -1153,7 +1259,7 @@ static char* test_directory_add_entry() {
 
 	return 0;
 }
-/*
+
 static char* test_inode_serialization() {
 	Inode inode = {0};
 	Inode inode2 = {0};
@@ -1202,7 +1308,7 @@ static char* test_inode_serialization() {
 	mem_free(data);
 	return 0;
 
-} */
+} 
 
 static char* test_superblock_serialization() {
 	Superblock superblock = { 0 };
@@ -1339,6 +1445,7 @@ static char* all_tests() {
 	mu_run_test(test_lf_disk_addressing_3);
 	mu_run_test(test_lf_disk_addressing_4);
 	mu_run_test(test_read_from_disk);
+	mu_run_test(test_directory_traversal);
 	mu_run_test(test_inode_serialization);
 	mu_run_test(test_write_inode);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test

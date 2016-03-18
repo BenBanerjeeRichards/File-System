@@ -94,3 +94,49 @@ int dir_find_next_path_name(HeapData path, int start, HeapData* name) {
 	name->size = current_name_len;
 	return SUCCESS;
 }
+
+int dir_get_directory(Disk disk, HeapData path, Directory start, DirectoryEntry* directory) {
+	bool found_entry = false;
+	int ret = 0;
+	Directory current = start;
+	DirectoryEntry previous_entry = {0};
+	int current_path_position = 0;
+	unsigned int inode_num = 0;
+
+	while(true) {
+		HeapData name = {0};
+		ret = dir_find_next_path_name(path, current_path_position, &name);
+		if(ret == ERR_INVALID_MEMORY_ACCESS) {
+			*directory = previous_entry;
+			return SUCCESS;
+		}
+
+		if(ret != SUCCESS && ret != ERR_INVALID_MEMORY_ACCESS) return ret;
+		current_path_position += name.size + 1;
+		
+		ret = dir_get_inode_number(current, name, &inode_num);
+		if(ret != SUCCESS) return ret;
+		
+		previous_entry.inode_number = inode_num;
+		previous_entry.name = name;
+
+		// Read inode
+		const double block_addr = inode_addr_to_disk_block_addr(disk, inode_num);
+		current = disk_read(disk, block_addr * BLOCK_SIZE, INODE_SIZE, &ret);
+		if(ret != SUCCESS) return ret;
+
+		Inode inode;
+		ret = unserialize_inode(&current, &inode);
+		if(ret != SUCCESS) return ret;
+
+		// Read directory as pointed to by inode
+		// This could be put into its own function
+		LList* dir_addresses = stream_read_addresses(disk, inode, &ret);
+		if(ret != SUCCESS) return ret;
+
+		current = fs_read_from_disk(disk, *dir_addresses, true, &ret);
+		if(ret != SUCCESS) return ret;
+	}
+
+	return SUCCESS;
+}

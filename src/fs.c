@@ -224,6 +224,7 @@ int fs_write_inode(Disk disk, Inode inode, int* inode_number) {
 	*inode_number = block_addr;
 
 	// Serialize inode
+	inode.inode_number = block_addr;
 	HeapData inode_data = {0};
 	mem_alloc(&inode_data, INODE_SIZE);
 	ret = serialize_inode(&inode_data, inode);
@@ -253,7 +254,7 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 	int ret = 0;
 	
 	LList* addresses;
-	ret = fs_allocate_blocks(disk, data.size / BLOCK_SIZE, &addresses);
+	ret = fs_allocate_blocks(disk, div_round_up(data.size, BLOCK_SIZE), &addresses);
 	if(ret != SUCCESS) return ret;
 
 	ret = fs_write_data_to_disk(disk, data, *addresses, true);

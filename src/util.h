@@ -5,7 +5,7 @@
 #include "memory.h"
 
 void append_block_sequence_lists(LList* parent, LList sublist);
-
+double inode_addr_to_disk_block_addr(Disk disk, int inode_addr);
 bool compare_block_sequence(void* el_1, void* el_2);
 
 uint32_t round_up_nearest_multiple(uint32_t, uint32_t);
