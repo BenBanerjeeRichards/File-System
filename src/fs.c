@@ -308,3 +308,20 @@ Disk fs_create_filesystem(const char* name, int size, int* error) {
 	return disk;
 }
 
+int fs_write_metadata(Disk disk) {
+	HeapData superblock = {0};
+	mem_alloc(&superblock, BLOCK_SIZE);
+	serialize_superblock(&superblock, disk.superblock);
+
+	int ret = disk_write(&disk, SUPERBLOCK_BLOCK_ADDR, superblock);
+	if(ret != SUCCESS) return ret;
+
+	ret = disk_write(&disk, INODE_BITMAP_BLOCK_ADDR, disk.inode_bitmap);
+	if(ret != SUCCESS) return ret;
+
+	ret = disk_write(&disk, disk.superblock.data_block_bitmap_addr, disk.data_bitmap);
+	if(ret != SUCCESS) return ret;
+
+	return SUCCESS;
+}
+
