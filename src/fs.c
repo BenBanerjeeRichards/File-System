@@ -240,6 +240,7 @@ int fs_write_inode(Disk disk, Inode inode, int* inode_number) {
 
 	// Update bitmap
 	bitmap_write(&disk.inode_bitmap, block_addr, 1);
+	disk.superblock.num_used_inodes += 1;
 	return SUCCESS;
 }
 
