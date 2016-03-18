@@ -109,6 +109,77 @@ Disk create_less_fragmented_disk() {
 	return disk;
 }
 
+static char* test_metedata_load_and_store() {
+	const char* name = "testloadstore.bin";
+	int ret = 0;
+
+	Disk disk = fs_create_filesystem(name, KILO, &ret);
+
+	// Fill out some more information
+	disk.superblock.num_used_blocks = 0xFE23;
+	disk.superblock.data_bitmap_circular_loc = 34;
+	disk.superblock.flags = 53234;
+	disk.superblock.num_used_inodes = 23894;
+
+	for(int i = 0; i < disk.superblock.num_data_blocks; i++) {
+		bitmap_write(&disk.data_bitmap, i, i % 13);
+	}
+
+	for(int i = 0; i < disk.superblock.num_inodes; i++) {
+		bitmap_write(&disk.inode_bitmap, i, i % 15);
+	}
+
+	// Deep copy disk for comparison later on
+	// This could be a useful util function
+	Disk disk_1 = {0};
+	disk_1.superblock.block_size = disk.superblock.block_size;
+	disk_1.superblock.data_bitmap_circular_loc = disk.superblock.data_bitmap_circular_loc;
+	disk_1.superblock.data_blocks_start_addr = disk.superblock.data_blocks_start_addr;
+	disk_1.superblock.data_block_bitmap_addr = disk.superblock.data_block_bitmap_addr;
+	disk_1.superblock.data_block_bitmap_size = disk.superblock.data_block_bitmap_size;
+	disk_1.superblock.data_block_bitmap_size_bytes = disk.superblock.data_block_bitmap_size_bytes;
+	disk_1.superblock.flags = disk.superblock.flags;
+	disk_1.superblock.inode_bitmap_size = disk.superblock.inode_bitmap_size;
+	disk_1.superblock.inode_bitmap_size_bytes = disk.superblock.inode_bitmap_size_bytes;
+	disk_1.superblock.inode_size = disk.superblock.inode_size;
+	disk_1.superblock.inode_table_size = disk.superblock.inode_table_size;
+	disk_1.superblock.inode_table_start_addr = disk.superblock.inode_table_start_addr;
+	disk_1.superblock.magic_1 = disk.superblock.magic_1;
+	disk_1.superblock.magic_2 = disk.superblock.magic_2;
+	disk_1.superblock.num_blocks = disk.superblock.num_blocks;
+	disk_1.superblock.num_data_blocks = disk.superblock.num_data_blocks;
+	disk_1.superblock.num_inodes = disk.superblock.num_inodes;
+	disk_1.superblock.num_used_blocks = disk.superblock.num_used_blocks;
+	disk_1.superblock.num_used_inodes = disk.superblock.num_used_inodes;
+	disk_1.superblock.version = disk.superblock.version;
+
+	Bitmap db = {0};
+	Bitmap ib = {0};
+	disk.data_bitmap = db;
+	disk.inode_bitmap = ib;
+	mem_alloc(&disk_1.data_bitmap, disk.data_bitmap.size);
+	mem_alloc(&disk_1.inode_bitmap, disk.inode_bitmap.size);
+	memcpy(disk_1.data_bitmap.data, disk.data_bitmap.data, disk.data_bitmap.size);
+	memcpy(disk_1.inode_bitmap.data, disk.inode_bitmap.data, disk.inode_bitmap.size);
+
+	fs_write_metadata(disk);
+	fs_read_metadata(disk);
+
+	int cmp = compare_superblock(disk_1.superblock, disk.superblock);
+	mu_assert("[MinUnit][TEST] metadata io: failed superblock comparison", cmp == 0);
+
+	cmp = memcmp(disk.data_bitmap.data, disk_1.data_bitmap.data, disk.data_bitmap.size);
+	mu_assert("[MinUnit][TEST] metadata io: failed data bitmap comparison", cmp == 0);
+	
+	cmp = memcmp(disk.inode_bitmap.data, disk_1.inode_bitmap.data, disk.inode_bitmap.size);
+	mu_assert("[MinUnit][TEST] metadata io: failed inode bitmap comparison", cmp == 0);
+
+
+	disk_unmount(disk);
+	disk_remove(name);
+	return 0;
+}
+
 static char* test_write_inode() {
 	const int size = MEGA;
 	const char* fname = "testinode.bin";
@@ -1448,6 +1519,7 @@ static char* all_tests() {
 	mu_run_test(test_directory_traversal);
 	mu_run_test(test_inode_serialization);
 	mu_run_test(test_write_inode);
+	mu_run_test(test_metedata_load_and_store);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;
