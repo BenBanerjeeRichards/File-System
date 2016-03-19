@@ -109,6 +109,88 @@ Disk create_less_fragmented_disk() {
 	return disk;
 }
 
+static char* test_read_inode() {
+	int ret = 0;
+	Disk disk = fs_create_filesystem("testreadinode.bin", MEGA, &ret);
+
+	// Create some sample inodes
+	Inode inode_1 = {0};
+	Inode inode_2 = {0};
+	Inode inode_3 = {0};
+
+	inode_1.magic = inode_2.magic = inode_3.magic = INODE_MAGIC;
+
+	inode_1.time_created = 123456789;
+	inode_2.time_created = 987654321;
+	inode_3.time_created = 657483929;
+
+	inode_1.time_last_modified = 65465452;
+	inode_2.time_last_modified = 34534856;
+	inode_3.time_last_modified = 74136955;
+
+	inode_1.flags = 23;
+	inode_2.flags = 123982;
+	inode_3.flags = 123;
+
+	inode_1.gid = 1;
+	inode_2.gid = 2;
+	inode_3.gid = 3;
+
+	inode_1.uid = 4;
+	inode_2.uid = 5;
+	inode_3.uid = 5;
+
+	inode_1.preallocation_size = 64;
+	inode_2.preallocation_size = 65;
+	inode_3.preallocation_size = 66;
+
+	inode_1.size = 23;
+	inode_2.size = 523;
+	inode_3.size = 12309;
+
+	inode_1.data.direct[0].start_addr = 123480973;
+	inode_1.data.direct[1].start_addr = 90862343;
+	inode_1.data.direct[2].start_addr = 20347563;
+	inode_1.data.direct[3].start_addr = 674839201;
+	inode_1.data.direct[4].start_addr = 394094538;
+	inode_1.data.direct[5].start_addr = 758390124;
+
+	inode_2.data.direct[0].length = 230847234;
+	inode_2.data.direct[1].length = 982348672;
+	inode_2.data.direct[2].length = 495873234;
+	inode_2.data.direct[3].length = 789234873;
+	inode_2.data.direct[4].length = 91283445;
+	inode_2.data.direct[5].length = 294723485;
+
+	// Write the inodes to disk
+	int inode_1_num = 0;
+	int inode_2_num = 0;
+	int inode_3_num = 0;
+	fs_write_inode(disk, &inode_1, &inode_1_num);
+	fs_write_inode(disk, &inode_2, &inode_2_num);
+	fs_write_inode(disk, &inode_3, &inode_3_num);
+
+	// Read the inodes again
+	Inode inode_read_1 = fs_read_inode(disk, inode_1_num, &ret);
+	Inode inode_read_2 = fs_read_inode(disk, inode_2_num, &ret);
+	Inode inode_read_3 = fs_read_inode(disk, inode_3_num, &ret);
+
+	// Compare
+	int cmp = compare_inode(inode_1, inode_read_1);
+	mu_assert("[MinUnit][TEST] read inode: inode comparison failed [1]", cmp == 0);
+
+	cmp = compare_inode(inode_2, inode_read_2);
+	mu_assert("[MinUnit][TEST] read inode: inode comparison failed [2]", cmp == 0);
+
+	cmp = compare_inode(inode_3, inode_read_3);
+	mu_assert("[MinUnit][TEST] read inode: inode comparison failed [3]", cmp == 0);
+
+	disk_unmount(disk);
+	disk_remove(disk.filename);
+	disk_free(disk);
+	return 0;
+}
+
 static char* test_append_data_to_disk() {
 	Disk disk = create_fragmented_disk();
 
@@ -1554,6 +1636,7 @@ static char* all_tests() {
 	mu_run_test(test_write_inode);
 	mu_run_test(test_metedata_load_and_store);
 	mu_run_test(test_append_data_to_disk);
+	mu_run_test(test_read_inode);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;

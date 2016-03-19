@@ -159,6 +159,7 @@ int fs_write_metadata(Disk disk);
 int fs_read_metadata(Disk disk);
 int fs_write_inode_data(Disk disk, Inode inode, int inode_num);
 Disk fs_create_filesystem(const char* name, int size, int* error);
+Inode fs_read_inode(Disk disk, int inode_num, int* error);
 HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* error);
 HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, bool data_block, int* error);
 HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* error);

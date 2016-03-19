@@ -275,6 +275,28 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 	return SUCCESS;
 } 
 
+Inode fs_read_inode(Disk disk, int inode_num, int* error) {
+	Inode inode = {0};
+	int ret = 0;
+
+	double block_addr = inode_addr_to_disk_block_addr(disk, inode_num);
+	HeapData inode_data = disk_read(disk, block_addr * BLOCK_SIZE, INODE_SIZE, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode;
+	}
+
+	ret = unserialize_inode(&inode_data, &inode);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode;
+	}
+
+	inode.inode_number = inode_num;
+
+	return inode;
+}
+
 Disk fs_create_filesystem(const char* name, int size, int* error) {
 	Disk disk = {0};
 	Superblock sb = {0};
