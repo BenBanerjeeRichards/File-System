@@ -284,6 +284,64 @@ LList* stream_read_addresses(Disk disk, Inode inode, int* error) {
 
 int stream_clear_bitmap(Disk* disk, LList addresses) {
 	LListNode* current = addresses.head;
+LList* stream_read_alloc_idts(Disk disk, Inode inode, int* error) {
+	LList* addresses = llist_new();
+	int ret = 0;
+
+	if(block_seq_is_empty(inode.data.double_indirect)) {
+		return addresses;
+	}
+
+	// Being careful here to avoid issues with void*
+	BlockSequence indirect = inode.data.double_indirect;
+	llist_insert(addresses, &indirect);
+
+	LList* double_indirects = stream_read_address_block(disk, inode.data.double_indirect, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return addresses;
+	}
+
+	append_block_sequence_lists(addresses, *double_indirects);
+
+	if(block_seq_is_empty(inode.data.triple_indirect)) {
+		return addresses;
+	}
+
+	BlockSequence triple_indirect = inode.data.triple_indirect;
+	llist_insert(addresses, &triple_indirect);
+
+
+	LList* triple_indirects = stream_read_address_block(disk, inode.data.triple_indirect, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return addresses;
+	}
+
+	append_block_sequence_lists(addresses, *triple_indirects);
+
+
+	// Now read indirects from T indirects (D indirects)
+	LListNode* current = triple_indirects->head;
+	for(int i = 0; i < triple_indirects->num_elements; i++) {
+		BlockSequence* seq = current->element;
+
+		LList* t_double_indirects = stream_read_address_block(disk, *seq, &ret);
+		if(ret != SUCCESS) {
+			*error = ret;
+			return addresses;
+		}
+
+		if(t_double_indirects->num_elements == 0) break;
+
+		// Write to main LList
+		append_block_sequence_lists(addresses, *t_double_indirects);
+		current = current->next;
+	}
+
+
+	return addresses;
+}
 	int ret = 0;
 
 	for(int i = 0; i < addresses.num_elements; i++) {
