@@ -131,12 +131,14 @@ typedef struct {
 	Superblock superblock;
 	Bitmap inode_bitmap;
 	Bitmap data_bitmap;
+
 	// For an in memory disk
 	HeapData data;
 
 	// For using a file
 	FILE* file;
 	int size;
+	const char* filename;
 } Disk;
 
 typedef struct {

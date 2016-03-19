@@ -306,6 +306,8 @@ Disk fs_create_filesystem(const char* name, int size, int* error) {
 		return disk;
 	}
 
+	disk.filename = name;
+
 	return disk;
 }
 
