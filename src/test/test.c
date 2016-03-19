@@ -271,12 +271,12 @@ static char* test_write_inode() {
 	inode_1.data.direct[4].start_addr = 394094538;
 	inode_1.data.direct[5].start_addr = 758390124;
 
-	inode_1.data.direct[0].length = 230847234;
-	inode_1.data.direct[1].length = 982348672;
-	inode_1.data.direct[2].length = 495873234;
-	inode_1.data.direct[3].length = 789234873;
-	inode_1.data.direct[4].length = 91283445;
-	inode_1.data.direct[5].length = 294723485;
+	inode_2.data.direct[0].length = 230847234;
+	inode_2.data.direct[1].length = 982348672;
+	inode_2.data.direct[2].length = 495873234;
+	inode_2.data.direct[3].length = 789234873;
+	inode_2.data.direct[4].length = 91283445;
+	inode_2.data.direct[5].length = 294723485;
 
 	int num = 0;
 	fs_write_inode(disk, inode_1, &num);
