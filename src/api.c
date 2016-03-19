@@ -6,6 +6,10 @@ int api_mount_filesystem(Disk* disk) {
 	*disk = fs_create_filesystem(FILESYSTEM_FILE_NAME, DISK_SIZE, &ret);
 	if(ret != SUCCESS) return ret;
 
+	// Allocate space for root inode
+	ret = bitmap_write(&disk->inode_bitmap, ROOT_DIRECTORY_INODE_NUMBER, 1);
+	if(ret != SUCCESS) return ret;
+
 	return SUCCESS;
 }
 
@@ -22,3 +26,4 @@ int api_unmount_filesystem(Disk disk) {
 int api_remove_filesystem(Disk disk) {
 	return disk_remove(disk.filename);
 }
+
