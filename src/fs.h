@@ -153,7 +153,7 @@ typedef struct {
 int fs_create_superblock(Superblock*, uint64_t);
 int fs_allocate_blocks(Disk*, int, LList**); 
 int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_block);
-int fs_write_inode(Disk disk, Inode inode, int* inode_number);
+int fs_write_inode(Disk disk, Inode* inode, int* inode_number);
 int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number);
 int fs_write_metadata(Disk disk);
 int fs_read_metadata(Disk disk);

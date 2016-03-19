@@ -212,7 +212,7 @@ HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* err
 	return data;
 }
 
-int fs_write_inode(Disk disk, Inode inode, int* inode_number) {
+int fs_write_inode(Disk disk, Inode *inode, int* inode_number) {
 	// Find free inode on disk
 	const int start = 0;	// TODO set this correctly
 	int block_addr = 0;
@@ -222,12 +222,14 @@ int fs_write_inode(Disk disk, Inode inode, int* inode_number) {
 	if(ret != SUCCESS) return ret;
 
 	*inode_number = block_addr;
+	inode->inode_number = block_addr;
 
-	fs_write_inode_data(disk, inode, block_addr);
+	fs_write_inode_data(disk, *inode, block_addr);
 
 	// Update bitmap
 	bitmap_write(&disk.inode_bitmap, block_addr, 1);
 	disk.superblock.num_used_inodes += 1;
+
 	return SUCCESS;
 }
 
@@ -267,7 +269,7 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 	if(ret != SUCCESS) return ret;
 
 	int inode_num = 0;
-	ret = fs_write_inode(*disk, *inode, &inode_num);
+	ret = fs_write_inode(*disk, inode, &inode_num);
 
 	*inode_number = inode_num;
 	return SUCCESS;

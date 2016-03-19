@@ -279,13 +279,13 @@ static char* test_write_inode() {
 	inode_2.data.direct[5].length = 294723485;
 
 	int num = 0;
-	fs_write_inode(disk, inode_1, &num);
+	fs_write_inode(disk, &inode_1, &num);
 	mu_assert("[MinUnit][TEST] write inode: incorrect inode number [1]", num == 0);
 	
-	fs_write_inode(disk, inode_2, &num);
+	fs_write_inode(disk, &inode_2, &num);
 	mu_assert("[MinUnit][TEST] write inode: incorrect inode number [2]", num == 1);
 
-	fs_write_inode(disk, inode_3, &num);
+	fs_write_inode(disk, &inode_3, &num);
 	mu_assert("[MinUnit][TEST] write inode: incorrect inode number [3]", num == 2);
 
 	HeapData inode_read_1_data = disk_read(disk, disk.superblock.inode_table_start_addr * BLOCK_SIZE, INODE_SIZE, &ret);
