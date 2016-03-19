@@ -196,3 +196,15 @@ int disk_remove(const char* name) {
 	int ret = remove(name);
 	return (ret == 0) ? SUCCESS : ERR_FILE_OPERATION_FAILED;
 }
+
+int disk_free(Disk disk) {
+	int ret = 0;
+	
+	ret = mem_free(disk.data_bitmap);
+	if(ret != SUCCESS) return ret;
+
+	mem_free(disk.inode_bitmap);
+	if(ret != SUCCESS) return ret;
+
+	return SUCCESS;
+}
