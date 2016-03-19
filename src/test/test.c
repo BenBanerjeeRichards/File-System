@@ -109,6 +109,39 @@ Disk create_less_fragmented_disk() {
 	return disk;
 }
 
+static char* test_append_data_to_disk() {
+	Disk disk = create_fragmented_disk();
+
+	disk.file = fopen("fragmented.bin", "r+");
+
+	const int allocation_size = 3000; //66310
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size, &addresses);
+
+	Inode inode = {0};
+	int ret = stream_write_addresses(&disk, &inode, *addresses);
+	
+	// ---------------
+
+	const int allocation_size_2 = 200000;
+	LList* addresses_2;
+	fs_allocate_blocks(&disk, allocation_size_2, &addresses_2);
+	stream_append_to_addresses(disk, &inode, *addresses_2);
+
+	LList* read = stream_read_addresses(disk, inode, &ret);
+
+	llist_append(addresses, *addresses_2);
+	bool cmp = llist_is_equal(*addresses, *read, &compare_block_sequence);
+	mu_assert("[MinUnit][TEST] append to disk: new llist incorrect", cmp);
+
+
+	llist_free(addresses);
+	mem_free(disk.data_bitmap);
+	fclose(disk.file);
+
+	return 0;
+}
+
 static char* test_metedata_load_and_store() {
 	const char* name = "testloadstore.bin";
 	int ret = 0;
@@ -1520,6 +1553,7 @@ static char* all_tests() {
 	mu_run_test(test_inode_serialization);
 	mu_run_test(test_write_inode);
 	mu_run_test(test_metedata_load_and_store);
+	mu_run_test(test_append_data_to_disk);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;

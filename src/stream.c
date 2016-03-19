@@ -282,8 +282,6 @@ LList* stream_read_addresses(Disk disk, Inode inode, int* error) {
 	return addresses;
 }
 
-int stream_clear_bitmap(Disk* disk, LList addresses) {
-	LListNode* current = addresses.head;
 LList* stream_read_alloc_idts(Disk disk, Inode inode, int* error) {
 	LList* addresses = llist_new();
 	int ret = 0;
@@ -342,9 +340,51 @@ LList* stream_read_alloc_idts(Disk disk, Inode inode, int* error) {
 
 	return addresses;
 }
+
+int stream_append_to_addresses(Disk disk, Inode* inode, LList new_addresses) {
+	// Read existing addresses
+	int ret = 0;
+	LList* addresses = stream_read_alloc_idts(disk, *inode, &ret);
+
+	LListNode* current = addresses->head;
+	for(int i = 0; i < addresses->num_elements; i++) {
+		BlockSequence* seq = current->element;
+		ret = bitmap_write_range(disk.data_bitmap, seq->start_addr, seq->length, 0);
+		current = current->next;
+	}
+
+	if(ret != SUCCESS) return ret;
+
+	// Free bits
+	//mem_dump(disk.data_bitmap, "before.bin");
+	//ret = stream_clear_bitmap(&disk, addresses);
+
+	if(ret != SUCCESS) return ret;
+
+	// Create new list 
+	LList* block_addresses = stream_read_addresses(disk, *inode, &ret);
+	if(ret != SUCCESS) return ret;
+
+	append_block_sequence_lists(block_addresses, new_addresses);
+
+	BlockSequence* zero = malloc(sizeof(zero));
+	memset(zero, 0, sizeof(BlockSequence));
+	llist_insert(block_addresses, zero);
+	
+	// Write addresses 
+	ret = stream_write_addresses(&disk, inode, *block_addresses);
+	mem_dump(disk.data_bitmap, "after.bin");
+
+	free(zero);
+	// TODO llist_free(addresses);	
+	return SUCCESS;
+}
+
+int stream_clear_bitmap(Disk* disk, LList* addresses) {
+	LListNode* current = addresses->head;
 	int ret = 0;
 
-	for(int i = 0; i < addresses.num_elements; i++) {
+	for(int i = 0; i < addresses->num_elements; i++) {
 		BlockSequence* seq = current->element;
 
 		ret = bitmap_write_range(disk->data_bitmap, seq->start_addr, seq->length, 0);
