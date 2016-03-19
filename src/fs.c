@@ -279,8 +279,7 @@ Inode fs_read_inode(Disk disk, int inode_num, int* error) {
 	Inode inode = {0};
 	int ret = 0;
 
-	double block_addr = inode_addr_to_disk_block_addr(disk, inode_num);
-	HeapData inode_data = disk_read(disk, block_addr * BLOCK_SIZE, INODE_SIZE, &ret);
+	HeapData inode_data = fs_read_inode_data(disk, inode_num, &ret);
 	if(ret != SUCCESS) {
 		*error = ret;
 		return inode;
@@ -295,6 +294,21 @@ Inode fs_read_inode(Disk disk, int inode_num, int* error) {
 	inode.inode_number = inode_num;
 
 	return inode;
+}
+
+HeapData fs_read_inode_data(Disk disk, int inode_num, int* error) {
+	int ret = 0;
+	HeapData inode_data = {0};
+
+	double block_addr = inode_addr_to_disk_block_addr(disk, inode_num);
+	inode_data = disk_read(disk, block_addr * BLOCK_SIZE, INODE_SIZE, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode_data;
+	}
+
+	return inode_data;
+
 }
 
 Disk fs_create_filesystem(const char* name, int size, int* error) {
