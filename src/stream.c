@@ -281,3 +281,19 @@ LList* stream_read_addresses(Disk disk, Inode inode, int* error) {
 
 	return addresses;
 }
+
+int stream_clear_bitmap(Disk* disk, LList addresses) {
+	LListNode* current = addresses.head;
+	int ret = 0;
+
+	for(int i = 0; i < addresses.num_elements; i++) {
+		BlockSequence* seq = current->element;
+
+		ret = bitmap_write_range(disk->data_bitmap, seq->start_addr, seq->length, 0);
+		if(ret != SUCCESS) return ret;
+
+		current = current->next;
+	}
+
+	return SUCCESS;
+}
