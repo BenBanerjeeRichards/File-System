@@ -284,15 +284,17 @@ LList* stream_read_addresses(Disk disk, Inode inode, int* error) {
 
 LList* stream_read_alloc_idts(Disk disk, Inode inode, int* error) {
 	LList* addresses = llist_new();
+	addresses->free_element = &free_element_standard;
+
 	int ret = 0;
 
 	if(block_seq_is_empty(inode.data.double_indirect)) {
 		return addresses;
 	}
-
-	// Being careful here to avoid issues with void*
-	BlockSequence indirect = inode.data.double_indirect;
-	llist_insert(addresses, &indirect);
+	
+	BlockSequence* indirect = malloc(sizeof(BlockSequence));
+	memcpy(indirect, &inode.data.double_indirect, sizeof(BlockSequence));
+	llist_insert(addresses, indirect);
 
 	LList* double_indirects = stream_read_address_block(disk, inode.data.double_indirect, &ret);
 	if(ret != SUCCESS) {
@@ -306,8 +308,9 @@ LList* stream_read_alloc_idts(Disk disk, Inode inode, int* error) {
 		return addresses;
 	}
 
-	BlockSequence triple_indirect = inode.data.triple_indirect;
-	llist_insert(addresses, &triple_indirect);
+	BlockSequence* t_indirect = malloc(sizeof(BlockSequence));
+	memcpy(indirect, &inode.data.triple_indirect, sizeof(BlockSequence));
+	llist_insert(addresses, t_indirect);
 
 
 	LList* triple_indirects = stream_read_address_block(disk, inode.data.triple_indirect, &ret);
@@ -344,6 +347,7 @@ LList* stream_read_alloc_idts(Disk disk, Inode inode, int* error) {
 int stream_append_to_addresses(Disk disk, Inode* inode, LList new_addresses) {
 	// Read existing addresses
 	int ret = 0;
+	// TODO fix this uninitalized value
 	LList* addresses = stream_read_alloc_idts(disk, *inode, &ret);
 
 	LListNode* current = addresses->head;
