@@ -109,6 +109,48 @@ Disk create_less_fragmented_disk() {
 	return disk;
 }
 
+static char* test_fill_unused_allocated_data() {
+	Disk disk = create_fragmented_disk();
+	disk.file = fopen("fragmented.bin", "r+");
+
+	const int allocation_size_blocks = 4;		// 3.5 blocks;
+	const int allocation_size_bytes = 1792;
+	const int append_size = 256 + 256;		// 256 appended, 256 remain
+	LList* addresses;
+	fs_allocate_blocks(&disk, allocation_size_blocks, &addresses);
+
+	Inode inode = {0};
+	int ret = stream_write_addresses(&disk, &inode, *addresses);
+
+	// Write the data to the disk
+	HeapData data = {0};
+	mem_alloc(&data, allocation_size_bytes);
+	memset(data.data, 0xBB, allocation_size_bytes);
+	fs_write_data_to_disk(&disk, data, *addresses, true);
+	inode.size = allocation_size_bytes;
+	// Create memory to append
+	HeapData append_data = {0};
+	mem_alloc(&append_data, append_size);
+	memset(append_data.data, 0xDD, 256);
+	memset(&append_data.data[256], 0xEE, 256);
+	mem_dump(append_data, "appenddata.bin");
+
+	HeapData remaining_data = {0};
+	fs_fill_unused_allocated_data(&disk, &inode, append_data, &remaining_data);
+
+	mu_assert("[MinUnit][TEST] fill unused: remaining data incorrect size", remaining_data.size == 256);
+
+	// Now check the data was written correctlty
+	addresses = stream_read_addresses(disk, inode, &ret);
+
+	// Read data from the last item
+	BlockSequence* seq = addresses->head->element;
+	// TODO finish test
+	mem_free(append_data);
+	mem_free(disk.data_bitmap);
+	return 0;
+}
+
 static char* test_read_inode() {
 	int ret = 0;
 	Disk disk = fs_create_filesystem("testreadinode.bin", MEGA, &ret);
@@ -1637,6 +1679,7 @@ static char* all_tests() {
 	mu_run_test(test_metedata_load_and_store);
 	mu_run_test(test_append_data_to_disk);
 	mu_run_test(test_read_inode);
+	mu_run_test(test_fill_unused_allocated_data);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;
