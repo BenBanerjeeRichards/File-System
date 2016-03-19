@@ -145,6 +145,10 @@ typedef struct {
 	uint64_t addr;
 } BlockAddress;
 
+typedef struct {
+	uint32_t uid;
+	uint32_t gud;
+} Permissions;
 
 int fs_create_superblock(Superblock*, uint64_t);
 int fs_allocate_blocks(Disk*, int, LList**); 
