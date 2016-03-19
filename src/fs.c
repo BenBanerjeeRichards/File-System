@@ -223,24 +223,26 @@ int fs_write_inode(Disk disk, Inode inode, int* inode_number) {
 
 	*inode_number = block_addr;
 
-	// Serialize inode
-	inode.inode_number = block_addr;
-	HeapData inode_data = {0};
-	mem_alloc(&inode_data, INODE_SIZE);
-	ret = serialize_inode(&inode_data, inode);
-
-	// Write inode to disk
-	const int inode_per_block = BLOCK_SIZE / INODE_SIZE;
-	const double table_addr = (double)block_addr / (double)inode_per_block;
-	const double disk_addr = disk.superblock.inode_table_start_addr + table_addr;
-	const int disk_offset_bytes = disk_addr * BLOCK_SIZE;
-
-	ret = disk_write(&disk, disk_offset_bytes, inode_data);
-	if(ret != SUCCESS) return ret;
+	fs_write_inode_data(disk, inode, block_addr);
 
 	// Update bitmap
 	bitmap_write(&disk.inode_bitmap, block_addr, 1);
 	disk.superblock.num_used_inodes += 1;
+	return SUCCESS;
+}
+
+int fs_write_inode_data(Disk disk, Inode inode, int inode_num) {
+	// Serialize inode
+	inode.inode_number = inode_num;
+	HeapData inode_data = {0};
+	mem_alloc(&inode_data, INODE_SIZE);
+	int ret = serialize_inode(&inode_data, inode);
+
+	// Write inode to disk
+	double disk_offset = inode_addr_to_disk_block_addr(disk, inode_num);
+
+	ret = disk_write(&disk, disk_offset * BLOCK_SIZE, inode_data);
+	if(ret != SUCCESS) return ret;
 	return SUCCESS;
 }
 
