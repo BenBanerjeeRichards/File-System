@@ -395,30 +395,32 @@ int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, H
 	const int num_full_blocks = inode->size / BLOCK_SIZE;
 	const int data_end_bytes = inode->size - num_full_blocks * BLOCK_SIZE;
 	const int free_bytes = BLOCK_SIZE - data_end_bytes;
+	HeapData remaining = {0};
 
 	// Find the space on disk
 	LList* addresses = stream_read_addresses(*disk, *inode, &ret);
 	if(ret != SUCCESS) return ret;
 
-	BlockSequence* seq = addresses->tail->element;
-	const int byte_offset = seq->start_addr * BLOCK_SIZE + data_end_bytes;
+	if(addresses->num_elements != 0) {
+		BlockSequence* seq = addresses->tail->element;
+		const int byte_offset = seq->start_addr * BLOCK_SIZE + data_end_bytes;
 
-	const int actual_size = new_data.size;
-	new_data.size = (free_bytes < new_data.size) ? free_bytes : new_data.size;
+		const int actual_size = new_data.size;
+		new_data.size = (free_bytes < new_data.size) ? free_bytes : new_data.size;
 
-	// Write data
-	ret = disk_write_offset(disk, byte_offset, disk->superblock.data_blocks_start_addr * BLOCK_SIZE, new_data);
-	if(ret != SUCCESS) return ret;
+		// Write data
+		ret = disk_write_offset(disk, byte_offset, disk->superblock.data_blocks_start_addr * BLOCK_SIZE, new_data);
+		if(ret != SUCCESS) return ret;
 
-	inode->size += new_data.size;
+		inode->size += new_data.size;
+		new_data.size = actual_size;
 
-	new_data.size = actual_size;
+		if(free_bytes > new_data.size) {
+			*remaining_data = remaining;
+			return SUCCESS;
+		}
 
-	HeapData remaining = {0};
-	if(free_bytes > new_data.size) {
-		*remaining_data = remaining;
-		return SUCCESS;
-	}
+	} 
 
 	ret = mem_alloc(&remaining, new_data.size - free_bytes);
 	if(ret != SUCCESS) return ret;
