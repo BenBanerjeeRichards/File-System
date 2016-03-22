@@ -9,8 +9,10 @@
 #include "../serialize.h"
 #include "../stream.h"
 #include "../directory.h"
+#include "../api.h"
 #include "../../../core/src/llist.h"
 #include "test.h"
+
 
 int tests_run = 0;
 
@@ -107,6 +109,71 @@ Disk create_less_fragmented_disk() {
 	mem_free(full_block);
 
 	return disk;
+}
+
+static char* test_rw_1() {
+	int ret = 0;
+	Disk disk = fs_create_filesystem("testfs.bin", MEGA, &ret);
+
+	// Create a file
+	Directory root_dir = {0};
+	Directory test_dir = {0};
+
+	DirectoryEntry test_dir_entry = {0};
+	DirectoryEntry file_entry = {0};
+
+	HeapData test_dir_name = {0};
+	util_string_to_heap("Test Directory", &test_dir_name);
+	test_dir_entry.name = test_dir_name;
+	
+	HeapData file_name = {0};
+	util_string_to_heap("File.txt", &file_name);
+	file_entry.name = file_name;
+	file_entry.inode_number = 0xBB;
+	test_dir_entry.inode_number = 1;
+	
+	dir_add_entry(&root_dir, test_dir_entry);
+	//dir_add_entry(&test_dir, file_entry);
+
+	Inode root_inode = {0};
+	root_inode.size = root_dir.size;
+	root_inode.magic = INODE_MAGIC;
+
+	Inode test_dir_inode = {0};
+	test_dir_inode.size = test_dir.size;
+	test_dir_inode.magic = INODE_MAGIC;
+
+	int root_inode_num = 0;
+	int test_dir_inode_num = 0;
+
+	fs_write_file(&disk, &root_inode, root_dir, &root_inode_num);
+	fs_write_file(&disk, &test_dir_inode, test_dir, &test_dir_inode_num);
+
+	// Create a Test File
+	char* file_contents_str = "To be, or not to be: that is the question:Whether 'tis nobler in the mind to sufferThe slings and arrows of outrageous fortune,Or to take arms against a sea of troubles,And by opposing end them? To die: to sleep;No more; and by a sleep to say we endThe heart-ache and the thousand natural shocksThat flesh is heir to, 'tis a consummationDevoutly to be wish'd. To die, to sleep;To sleep: perchance to dream: ay, there's the rub;For in that sleep of death what dreams may comeWhen we have shuffled off this mortal coil,Must give us pause: there's the respectThat makes calamity of so long life;For who would bear the whips and scorns of time,The oppressor's wrong, the proud man's contumely,The pangs of despised love, the law's delay,The insolence of office and the spurnsThat patient merit of the unworthy takes,When he himself might his quietus makeWith a bare bodkin? who would fardels bear,To grunt and sweat under a weary life,But that the dread of something after death,The undiscover'd country from whose bournNo traveller returns, puzzles the willAnd makes us rather bear those ills we haveThan fly to others that we know not of?Thus conscience does make cowards of us all;And thus the native hue of resolutionIs sicklied o'er with the pale cast of thought,And enterprises of great pith and momentWith this regard their currents turn awry,And lose the name of action.Soft you now!The fair Ophelia! Nymph, in thy orisonsBe all my sins remember'd.";
+
+	HeapData file_contents = {0};
+	util_string_to_heap(file_contents_str, &file_contents);
+
+	HeapData path = {0}; 
+	util_string_to_heap("Test Directory/File.txt", &path);
+
+	Permissions perm = {0};
+	ret = api_create_file(disk, perm, path);
+	printf("%i\n", ret);
+	/*file_entry.inode_number = 0xBB;
+	dir_add_to_directory(disk, path, file_entry);
+	
+	HeapData file_name_2 = {0};
+	util_string_to_heap("picture.jpg", &file_name_2);
+	file_entry.name = file_name_2;
+
+	file_entry.inode_number = 0xAA;
+	dir_add_to_directory(disk, path, file_entry);
+
+	*/
+	// TODO complete test
+	return 0;
 }
 
 static char* test_fill_unused_allocated_data() {
@@ -1700,6 +1767,7 @@ static char* all_tests() {
 	mu_run_test(test_append_data_to_disk);
 	//mu_run_test(test_read_inode);
 	mu_run_test(test_fill_unused_allocated_data);
+	mu_run_test(test_rw_1);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;
