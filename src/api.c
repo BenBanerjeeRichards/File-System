@@ -54,6 +54,58 @@ int api_create_file(Disk disk, Permissions permissons, HeapData path) {
 	path.size = path_size;
 	return SUCCESS;
 }
+
+int api_write_to_file(Disk disk, HeapData path, HeapData data) {
+	int ret = 0;
+	DirectoryEntry file;
+
+	//HeapData root_inode = fs_read_inode_data(disk, ROOT_DIRECTORY_INODE_NUMBER, &ret);
+	//if(ret != SUCCESS) return ret;
+
+	Inode root_inode = fs_read_inode(disk, ROOT_DIRECTORY_INODE_NUMBER, &ret);
+	if(ret != SUCCESS) return ret;
+
+	LList* root_addresses = stream_read_addresses(disk, root_inode, &ret);
+	if(ret != SUCCESS) return ret;
+
+	Directory root = fs_read_from_disk(disk, *root_addresses, true, &ret);
+	if(ret != SUCCESS) return ret;
+
+	ret = dir_get_directory(disk, path, root, &file);
+	if(ret != SUCCESS) return ret;
+
+	Inode inode = fs_read_inode(disk, file.inode_number, &ret);
+	if(ret != SUCCESS) return ret;
+	
+	// TODO ensure that PBR works here
+	HeapData remaining = {0};
+	ret = fs_fill_unused_allocated_data(&disk, &inode, data, &remaining);
+	if(ret != SUCCESS) return ret;
+
+	// allocate more blocks for the remaining data
+	if(remaining.size == 0) return SUCCESS;
+
+	LList* addresses = {0};
+	ret = fs_allocate_blocks(&disk, div_round_up(remaining.size, BLOCK_SIZE), &addresses);
+	if(ret != SUCCESS) return ret;
+
+	if(inode.size == 0) {
+		ret = stream_append_to_addresses(disk, &inode, *addresses);
+		if(ret != SUCCESS) return ret;
+	} else {
+		ret = stream_write_addresses(&disk, &inode, *addresses);
+		if(ret != SUCCESS) return ret;
+	}
+
+	// Finally write the data to the disk
+	ret = fs_write_data_to_disk(&disk, remaining, *addresses, true);
+	if(ret != SUCCESS) return ret;
+
+	mem_free(remaining);
+
+	return SUCCESS;
+}
+
 int api_read_all_from_file(Disk disk, int inode_number, HeapData* read_data) {
 	int ret = 0;
 
@@ -66,5 +118,52 @@ int api_read_all_from_file(Disk disk, int inode_number, HeapData* read_data) {
 	*read_data = fs_read_from_disk(disk, *addresses, true, &ret);
 	if(ret != SUCCESS) return ret;
 
+	return SUCCESS;
+}
+
+// TODO complete this function
+int api_read_from_file(Disk disk, int inode_number, uint64_t start_read_byte, uint64_t read_length_bytes, HeapData* read_data) {
+	int ret = 0;
+
+	Inode inode = fs_read_inode(disk, inode_number, &ret);
+	if(ret != SUCCESS) return ret;
+	
+	LList* addresses = stream_read_addresses(disk, inode, &ret);
+	if(ret != SUCCESS) return ret;
+
+	LListNode* current = addresses->head;
+	LListNode* prev = NULL;
+
+	LList* read_addresses = llist_new();
+	read_addresses->free_element = &free_element_standard;
+
+	uint64_t previous_bytes = 0;
+	uint64_t bytes_read = 0;
+
+	bool start_reading = false;
+
+	for(int i = 0; i < addresses->num_elements; i++) {
+		BlockSequence* seq = current->element;
+
+		if(previous_bytes >= start_read_byte && bytes_read < read_length_bytes) {
+			llist_insert(read_addresses, seq);
+			bytes_read += seq->length * BLOCK_SIZE;
+		} else {
+			previous_bytes += seq->length * BLOCK_SIZE;
+		}
+
+		if(read_length_bytes > bytes_read) break;
+
+		// TODO update prev
+		current = current->next;
+	}
+
+	HeapData read = fs_read_from_disk(disk, *read_addresses, true, &ret);
+	HeapData read_final = {0};
+	mem_alloc(&read_final, read_length_bytes);
+
+
+	llist_free(read_addresses);
+	llist_free(addresses);
 	return SUCCESS;
 }
