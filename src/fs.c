@@ -428,3 +428,31 @@ int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, H
 
 	return SUCCESS;
 }
+
+int fs_write_to_file(Disk* disk, int inode_number, HeapData data) {
+	int ret = 0;
+
+	Inode inode =  fs_read_inode(*disk, inode_number, &ret);
+	if(ret != SUCCESS) return ret;
+
+	HeapData remaining = {0};
+	ret = fs_fill_unused_allocated_data(disk, &inode, data, &remaining);
+	if(ret != SUCCESS) return ret;
+
+	if(remaining.size == 0) return SUCCESS;
+	
+	LList* addresses;
+	ret = fs_allocate_blocks(disk, div_round_up(remaining.size, BLOCK_SIZE), &addresses);
+	if(ret != SUCCESS) return ret;
+	
+	ret = fs_write_data_to_disk(disk, remaining, *addresses, true);
+	if(ret != SUCCESS) return ret;
+
+	ret = stream_write_addresses(disk, &inode, *addresses);
+	if(ret != SUCCESS) return ret;
+
+	fs_write_inode_data(*disk, inode, inode.inode_number);
+	ret = stream_write_addresses(disk, &inode, *addresses);
+
+	return SUCCESS;
+}

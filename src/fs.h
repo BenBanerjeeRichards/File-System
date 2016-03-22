@@ -147,7 +147,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t uid;
-	uint32_t gud;
+	uint32_t gid;
 } Permissions;
 
 int fs_create_superblock(Superblock*, uint64_t);
@@ -159,6 +159,7 @@ int fs_write_metadata(Disk disk);
 int fs_read_metadata(Disk disk);
 int fs_write_inode_data(Disk disk, Inode inode, int inode_num);
 int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, HeapData* remaining_data);
+int fs_write_to_file(Disk* disk, int inode_number, HeapData data);
 
 Disk fs_create_filesystem(const char* name, int size, int* error);
 HeapData fs_read_inode_data(Disk disk, int inode_num, int* error);
