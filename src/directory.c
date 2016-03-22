@@ -145,8 +145,8 @@ int dir_get_path_name(HeapData path, HeapData* name) {
 	for(int i = path.size - 1; i >= 0; i--) {
 		if(path.data[i] == ASCII_FORWARD_SLASH) {
 			HeapData file_name = {0};
-			mem_alloc(&file_name, i - 1);
-			memcpy(file_name.data, &path.data[i + 1], i - 1);
+			mem_alloc(&file_name, path.size - i - 1);
+			memcpy(file_name.data, &path.data[i + 1], file_name.size);
 			*name = file_name;
 			return SUCCESS;
 		}
