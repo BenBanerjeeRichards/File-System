@@ -139,4 +139,18 @@ int dir_get_directory(Disk disk, HeapData path, Directory start, DirectoryEntry*
 	}
 
 	return SUCCESS;
+int dir_get_path_name(HeapData path, HeapData* name) {
+	for(int i = path.size - 1; i >= 0; i--) {
+		if(path.data[i] == ASCII_FORWARD_SLASH) {
+			HeapData file_name = {0};
+			mem_alloc(&file_name, i - 1);
+			memcpy(file_name.data, &path.data[i + 1], i - 1);
+			*name = file_name;
+			return SUCCESS;
+		}
+	}
+
+	return IS_ROOT_FILE;
+
+}
 }
