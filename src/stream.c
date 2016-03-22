@@ -347,7 +347,6 @@ LList* stream_read_alloc_idts(Disk disk, Inode inode, int* error) {
 int stream_append_to_addresses(Disk disk, Inode* inode, LList new_addresses) {
 	// Read existing addresses
 	int ret = 0;
-	// TODO fix this uninitalized value
 	LList* addresses = stream_read_alloc_idts(disk, *inode, &ret);
 
 	LListNode* current = addresses->head;
@@ -356,12 +355,6 @@ int stream_append_to_addresses(Disk disk, Inode* inode, LList new_addresses) {
 		ret = bitmap_write_range(disk.data_bitmap, seq->start_addr, seq->length, 0);
 		current = current->next;
 	}
-
-	if(ret != SUCCESS) return ret;
-
-	// Free bits
-	//mem_dump(disk.data_bitmap, "before.bin");
-	//ret = stream_clear_bitmap(&disk, addresses);
 
 	if(ret != SUCCESS) return ret;
 
