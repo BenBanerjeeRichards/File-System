@@ -113,9 +113,9 @@ static char* test_fill_unused_allocated_data() {
 	Disk disk = create_fragmented_disk();
 	disk.file = fopen("fragmented.bin", "r+");
 
-	const int allocation_size_blocks = 4;		// 3.5 blocks;
-	const int allocation_size_bytes = 1792;
-	const int append_size = 256 + 256;		// 256 appended, 256 remain
+	const int allocation_size_blocks = 4;		
+	const int allocation_size_bytes = 1797;		// 3.5 blocks + 5 bytes
+	const int append_size = 512;		
 	LList* addresses;
 	fs_allocate_blocks(&disk, allocation_size_blocks, &addresses);
 
@@ -128,24 +128,44 @@ static char* test_fill_unused_allocated_data() {
 	memset(data.data, 0xBB, allocation_size_bytes);
 	fs_write_data_to_disk(&disk, data, *addresses, true);
 	inode.size = allocation_size_bytes;
+
 	// Create memory to append
 	HeapData append_data = {0};
 	mem_alloc(&append_data, append_size);
-	memset(append_data.data, 0xDD, 256);
-	memset(&append_data.data[256], 0xEE, 256);
-	mem_dump(append_data, "appenddata.bin");
+	memset(append_data.data, 0xDD, 256 - 5);
+	memset(&append_data.data[256 - 5], 0xEE, 256 + 5);
 
 	HeapData remaining_data = {0};
 	fs_fill_unused_allocated_data(&disk, &inode, append_data, &remaining_data);
 
-	mu_assert("[MinUnit][TEST] fill unused: remaining data incorrect size", remaining_data.size == 256);
+	mu_assert("[MinUnit][TEST] fill unused: remaining data incorrect size", remaining_data.size == 256 + 5);
 
 	// Now check the data was written correctlty
 	addresses = stream_read_addresses(disk, inode, &ret);
 
 	// Read data from the last item
-	BlockSequence* seq = addresses->head->element;
-	// TODO finish test
+	BlockSequence* seq = addresses->tail->element;
+
+	HeapData block = fs_read_from_disk_by_sequence(disk, *seq, true, &ret);
+
+	// Create memory block 
+	HeapData expected = {0};
+	mem_alloc(&expected, 512);
+
+	memset(expected.data, 0xBB, 256 - 5);
+	memset(&expected.data[256 - 5], 0xDD, 256 + 5);
+
+	// Compare
+	int cmp = memcmp(block.data, block.data, 512);
+	mu_assert("[MinUnit][TEST] fill unused: final block comparison failed", cmp == 0);
+
+	// Check the remaining data
+	for(int i = 0; i < remaining_data.size; i++) {
+		mu_assert("[MinUnit][TEST] fill unused: remaining data incorrect", remaining_data.data[i] == 0xEE);
+	}
+
+	mem_free(expected);
+	mem_free(block);
 	mem_free(append_data);
 	mem_free(disk.data_bitmap);
 	return 0;
@@ -1647,38 +1667,38 @@ static char* test_bitmap_io() {
 
 
 static char* all_tests() {
-	mu_run_test(test_write_data_to_disk_2);
-	mu_run_test(test_superblock_serialization);
-	mu_run_test(test_superblock_calculations);
-	mu_run_test(test_bitmap_io);
-	mu_run_test(test_directory_get_inode_number);
-	mu_run_test(test_directory_add_entry);
-	mu_run_test(test_find_continuous_bitmap_run);
-	mu_run_test(test_next_dir_name);
-	mu_run_test(test_find_next_bitmap_block);
-	mu_run_test(test_alloc_blocks_continuous);
-	mu_run_test(test_find_continuous_bitmap_run_2);
-	mu_run_test(test_write_data_to_disk);
-	mu_run_test(test_disk_io);
-	mu_run_test(test_disk_io_2);
-	mu_run_test(test_file_disk_addressssing);
-	mu_run_test(test_div_round_up);
-	mu_run_test(test_read_from_disk_by_seq);
-	mu_run_test(test_file_disk_addressing_2);
-	mu_run_test(test_file_disk_addressing_3);
-	mu_run_test(test_file_disk_addressing_4);
-	mu_run_test(test_file_disk_addressing_5);
-	mu_run_test(test_lf_disk_addressing);
-	mu_run_test(test_lf_disk_addressing_2);
-	mu_run_test(test_lf_disk_addressing_3);
-	mu_run_test(test_lf_disk_addressing_4);
-	mu_run_test(test_read_from_disk);
-	mu_run_test(test_directory_traversal);
-	mu_run_test(test_inode_serialization);
-	mu_run_test(test_write_inode);
-	mu_run_test(test_metedata_load_and_store);
+	//mu_run_test(test_write_data_to_disk_2);
+	//mu_run_test(test_superblock_serialization);
+	//mu_run_test(test_superblock_calculations);
+	//mu_run_test(test_bitmap_io);
+	//mu_run_test(test_directory_get_inode_number);
+	//mu_run_test(test_directory_add_entry);
+	//mu_run_test(test_find_continuous_bitmap_run);
+	//mu_run_test(test_next_dir_name);
+	//mu_run_test(test_find_next_bitmap_block);
+	//mu_run_test(test_alloc_blocks_continuous);
+	//mu_run_test(test_find_continuous_bitmap_run_2);
+	//mu_run_test(test_write_data_to_disk);
+	//mu_run_test(test_disk_io);
+	//mu_run_test(test_disk_io_2);
+	//mu_run_test(test_file_disk_addressssing);
+	//mu_run_test(test_div_round_up);
+	//mu_run_test(test_read_from_disk_by_seq);
+	//mu_run_test(test_file_disk_addressing_2);
+	//mu_run_test(test_file_disk_addressing_3);
+	//mu_run_test(test_file_disk_addressing_4);
+	//mu_run_test(test_file_disk_addressing_5);
+	//mu_run_test(test_lf_disk_addressing);
+	//mu_run_test(test_lf_disk_addressing_2);
+	//mu_run_test(test_lf_disk_addressing_3);
+	//mu_run_test(test_lf_disk_addressing_4);
+	//mu_run_test(test_read_from_disk);
+	//mu_run_test(test_directory_traversal);
+	//mu_run_test(test_inode_serialization);
+	//mu_run_test(test_write_inode);
+	//mu_run_test(test_metedata_load_and_store);
 	mu_run_test(test_append_data_to_disk);
-	mu_run_test(test_read_inode);
+	//mu_run_test(test_read_inode);
 	mu_run_test(test_fill_unused_allocated_data);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
