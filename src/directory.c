@@ -139,6 +139,8 @@ int dir_get_directory(Disk disk, HeapData path, Directory start, DirectoryEntry*
 	}
 
 	return SUCCESS;
+}
+
 int dir_get_path_name(HeapData path, HeapData* name) {
 	for(int i = path.size - 1; i >= 0; i--) {
 		if(path.data[i] == ASCII_FORWARD_SLASH) {
@@ -153,4 +155,33 @@ int dir_get_path_name(HeapData path, HeapData* name) {
 	return IS_ROOT_FILE;
 
 }
+
+int dir_add_to_directory(Disk disk, HeapData path, DirectoryEntry entry) {
+	// DirectoryEntry represents a file which has been allocated and stored on disk
+	// but not placed in a directory.
+	int ret = 0;	
+
+	// Get root directory
+	Inode inode = fs_read_inode(disk, ROOT_DIRECTORY_INODE_NUMBER, &ret);
+	if(ret != SUCCESS) return ret;
+
+	LList* root_addresses = stream_read_addresses(disk, inode, &ret);
+	if(ret != SUCCESS) return ret;
+
+	HeapData root_data = fs_read_from_disk(disk, *root_addresses, true, &ret);
+	if(ret != SUCCESS) return ret;
+
+	// Find directory
+	DirectoryEntry parent_entry = {0};
+	ret = dir_get_directory(disk, path, root_data, &parent_entry);
+	if(ret != SUCCESS) return ret;
+
+	Directory directory = {0};
+	ret = dir_add_entry(&directory, entry);
+	if(ret != SUCCESS) return ret;
+
+	ret = fs_write_to_file(&disk, parent_entry.inode_number, directory);
+	if(ret != SUCCESS) return ret;
+
+	return SUCCESS;
 }

@@ -12,4 +12,6 @@ int dir_add_entry(Directory* directory, DirectoryEntry entry);
 int dir_get_inode_number(Directory directory, HeapData name, uint32_t* inode_number);
 int dir_find_next_path_name(HeapData path, int start, HeapData* name);
 int dir_get_directory(Disk disk, HeapData path, Directory start, DirectoryEntry* directory);
+int dir_add_to_directory(Disk disk, HeapData path, DirectoryEntry entry);
+int dir_get_path_name(HeapData path, HeapData* name);
 #endif

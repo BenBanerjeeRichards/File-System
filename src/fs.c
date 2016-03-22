@@ -394,7 +394,7 @@ int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, H
 	
 	const int num_full_blocks = inode->size / BLOCK_SIZE;
 	const int data_end_bytes = inode->size - num_full_blocks * BLOCK_SIZE;
-	const int free_bytes = BLOCK_SIZE - data_end_bytes;
+	int free_bytes = BLOCK_SIZE - data_end_bytes;
 	HeapData remaining = {0};
 
 	// Find the space on disk
@@ -412,15 +412,16 @@ int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, H
 		ret = disk_write_offset(disk, byte_offset, disk->superblock.data_blocks_start_addr * BLOCK_SIZE, new_data);
 		if(ret != SUCCESS) return ret;
 
-		inode->size += new_data.size;
+		//inode->size += new_data.size;
 		new_data.size = actual_size;
 
 		if(free_bytes > new_data.size) {
 			*remaining_data = remaining;
 			return SUCCESS;
-		}
-
-	} 
+		} 
+	} else {
+		free_bytes = 0;
+	}
 
 	ret = mem_alloc(&remaining, new_data.size - free_bytes);
 	if(ret != SUCCESS) return ret;
@@ -452,6 +453,8 @@ int fs_write_to_file(Disk* disk, int inode_number, HeapData data) {
 
 	ret = stream_write_addresses(disk, &inode, *addresses);
 	if(ret != SUCCESS) return ret;
+
+	inode.size += data.size;
 
 	fs_write_inode_data(*disk, inode, inode.inode_number);
 	ret = stream_write_addresses(disk, &inode, *addresses);
