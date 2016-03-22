@@ -410,6 +410,8 @@ int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, H
 	ret = disk_write_offset(disk, byte_offset, disk->superblock.data_blocks_start_addr * BLOCK_SIZE, new_data);
 	if(ret != SUCCESS) return ret;
 
+	inode->size += new_data.size;
+
 	new_data.size = actual_size;
 
 	HeapData remaining = {0};
