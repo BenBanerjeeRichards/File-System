@@ -163,6 +163,7 @@ int fs_write_to_file(Disk* disk, int inode_number, HeapData data);
 
 Disk fs_create_filesystem(const char* name, int size, int* error);
 HeapData fs_read_inode_data(Disk disk, int inode_num, int* error);
+Inode fs_get_inode_from_path(Disk disk, HeapData path, int* error);
 Inode fs_read_inode(Disk disk, int inode_num, int* error);
 HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* error);
 HeapData fs_read_from_disk_by_sequence(Disk disk, BlockSequence seq, bool data_block, int* error);

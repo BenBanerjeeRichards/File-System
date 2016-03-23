@@ -9,6 +9,7 @@
 #include "util.h"
 #include "stream.h"
 #include "serialize.h"
+#include "directory.h"
 #include "../../core/src/llist.h"
 
 
@@ -461,4 +462,40 @@ int fs_write_to_file(Disk* disk, int inode_number, HeapData data) {
 	ret = stream_write_addresses(disk, &inode, *addresses);
 
 	return SUCCESS;
+}
+
+Inode fs_get_inode_from_path(Disk disk, HeapData path, int* error) {
+	Inode inode = {0};
+	DirectoryEntry file;
+
+	int ret = 0;
+
+	Inode root_inode = fs_read_inode(disk, ROOT_DIRECTORY_INODE_NUMBER, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode;
+	}
+
+	LList* root_addresses = stream_read_addresses(disk, root_inode, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode;
+	}
+	Directory root = fs_read_from_disk(disk, *root_addresses, true, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode;
+	}
+	ret = dir_get_directory(disk, path, root, &file);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode;
+	}
+	inode = fs_read_inode(disk, file.inode_number, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return inode;
+	}
+
+	return inode;
 }

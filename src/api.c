@@ -57,26 +57,9 @@ int api_create_file(Disk disk, Permissions permissons, HeapData path) {
 
 int api_write_to_file(Disk disk, HeapData path, HeapData data) {
 	int ret = 0;
-	DirectoryEntry file;
-
-	//HeapData root_inode = fs_read_inode_data(disk, ROOT_DIRECTORY_INODE_NUMBER, &ret);
-	//if(ret != SUCCESS) return ret;
-
-	Inode root_inode = fs_read_inode(disk, ROOT_DIRECTORY_INODE_NUMBER, &ret);
+	Inode inode = fs_get_inode_from_path(disk, path, &ret);
 	if(ret != SUCCESS) return ret;
 
-	LList* root_addresses = stream_read_addresses(disk, root_inode, &ret);
-	if(ret != SUCCESS) return ret;
-
-	Directory root = fs_read_from_disk(disk, *root_addresses, true, &ret);
-	if(ret != SUCCESS) return ret;
-
-	ret = dir_get_directory(disk, path, root, &file);
-	if(ret != SUCCESS) return ret;
-
-	Inode inode = fs_read_inode(disk, file.inode_number, &ret);
-	if(ret != SUCCESS) return ret;
-	
 	inode.size += data.size;
 
 	HeapData remaining = {0};
