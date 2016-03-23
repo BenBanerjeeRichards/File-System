@@ -78,6 +78,7 @@ int api_write_to_file(Disk disk, HeapData path, HeapData data) {
 	if(ret != SUCCESS) return ret;
 	
 	inode.size += data.size;
+
 	HeapData remaining = {0};
 	ret = fs_fill_unused_allocated_data(&disk, &inode, data, &remaining);
 	if(ret != SUCCESS) return ret;
@@ -103,6 +104,7 @@ int api_write_to_file(Disk disk, HeapData path, HeapData data) {
 
 	ret = fs_write_inode_data(disk, inode, inode.inode_number);
 	if(ret != SUCCESS) return ret;
+
 	mem_free(remaining);
 
 	return SUCCESS;
@@ -117,8 +119,21 @@ int api_read_all_from_file(Disk disk, int inode_number, HeapData* read_data) {
 	LList* addresses = stream_read_addresses(disk, inode, &ret);
 	if(ret != SUCCESS) return ret;
 
-	*read_data = fs_read_from_disk(disk, *addresses, true, &ret);
+	HeapData read = fs_read_from_disk(disk, *addresses, true, &ret);
 	if(ret != SUCCESS) return ret;
+
+	// Trim to actual data
+	if(read.size < inode.size) {
+		return ERR_INSUFFICIENT_DATA_READ;
+	}
+
+	HeapData read_trimmed = {0};
+	ret = mem_alloc(&read_trimmed, inode.size);
+	if(ret != SUCCESS) return ret;
+
+	memcpy(read_trimmed.data, read.data, inode.size);
+	*read_data = read_trimmed;
+	mem_free(read);
 
 	return SUCCESS;
 }
