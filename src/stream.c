@@ -349,13 +349,7 @@ int stream_append_to_addresses(Disk disk, Inode* inode, LList new_addresses) {
 	int ret = 0;
 	LList* addresses = stream_read_alloc_idts(disk, *inode, &ret);
 
-	LListNode* current = addresses->head;
-	for(int i = 0; i < addresses->num_elements; i++) {
-		BlockSequence* seq = current->element;
-		ret = bitmap_write_range(disk.data_bitmap, seq->start_addr, seq->length, 0);
-		current = current->next;
-	}
-
+	ret = stream_clear_bitmap(&disk, addresses);
 	if(ret != SUCCESS) return ret;
 
 	// Create new list 
