@@ -224,7 +224,8 @@ int fs_write_inode(Disk disk, Inode *inode, int* inode_number) {
 	*inode_number = block_addr;
 	inode->inode_number = block_addr;
 
-	fs_write_inode_data(disk, *inode, block_addr);
+	ret = fs_write_inode_data(disk, *inode, block_addr);
+	if(ret != SUCCESS) return ret;
 
 	// Update bitmap
 	bitmap_write(&disk.inode_bitmap, block_addr, 1);
