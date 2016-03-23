@@ -127,13 +127,13 @@ static char* test_rw_1() {
 	test_dir_entry.name = test_dir_name;
 	
 	HeapData file_name = {0};
-	util_string_to_heap("File.txt", &file_name);
+	util_string_to_heap("File 2.txt", &file_name);
 	file_entry.name = file_name;
 	file_entry.inode_number = 0xBB;
 	test_dir_entry.inode_number = 1;
 	
 	dir_add_entry(&root_dir, test_dir_entry);
-	//dir_add_entry(&test_dir, file_entry);
+	dir_add_entry(&test_dir, file_entry);
 
 	Inode root_inode = {0};
 	root_inode.size = root_dir.size;
@@ -146,8 +146,8 @@ static char* test_rw_1() {
 	int root_inode_num = 0;
 	int test_dir_inode_num = 0;
 
-	fs_write_file(&disk, &root_inode, root_dir, &root_inode_num);
-	fs_write_file(&disk, &test_dir_inode, test_dir, &test_dir_inode_num);
+	ret = fs_write_file(&disk, &root_inode, root_dir, &root_inode_num);
+	ret = fs_write_file(&disk, &test_dir_inode, test_dir, &test_dir_inode_num);
 
 	// Create a Test File
 	char* file_contents_str = "To be, or not to be: that is the question:Whether 'tis nobler in the mind to sufferThe slings and arrows of outrageous fortune,Or to take arms against a sea of troubles,And by opposing end them? To die: to sleep;No more; and by a sleep to say we endThe heart-ache and the thousand natural shocksThat flesh is heir to, 'tis a consummationDevoutly to be wish'd. To die, to sleep;To sleep: perchance to dream: ay, there's the rub;For in that sleep of death what dreams may comeWhen we have shuffled off this mortal coil,Must give us pause: there's the respectThat makes calamity of so long life;For who would bear the whips and scorns of time,The oppressor's wrong, the proud man's contumely,The pangs of despised love, the law's delay,The insolence of office and the spurnsThat patient merit of the unworthy takes,When he himself might his quietus makeWith a bare bodkin? who would fardels bear,To grunt and sweat under a weary life,But that the dread of something after death,The undiscover'd country from whose bournNo traveller returns, puzzles the willAnd makes us rather bear those ills we haveThan fly to others that we know not of?Thus conscience does make cowards of us all;And thus the native hue of resolutionIs sicklied o'er with the pale cast of thought,And enterprises of great pith and momentWith this regard their currents turn awry,And lose the name of action.Soft you now!The fair Ophelia! Nymph, in thy orisonsBe all my sins remember'd.";
@@ -155,24 +155,19 @@ static char* test_rw_1() {
 	HeapData file_contents = {0};
 	util_string_to_heap(file_contents_str, &file_contents);
 
-	HeapData path = {0}; 
-	util_string_to_heap("Test Directory/File.txt", &path);
+	HeapData path = {0};
+	util_string_to_heap("Test Directory/Some English.txt", &path);
+
 
 	Permissions perm = {0};
-	ret = api_create_file(disk, perm, path);
-	printf("%i\n", ret);
-	/*file_entry.inode_number = 0xBB;
-	dir_add_to_directory(disk, path, file_entry);
-	
-	HeapData file_name_2 = {0};
-	util_string_to_heap("picture.jpg", &file_name_2);
-	file_entry.name = file_name_2;
+	api_create_file(disk, perm, path);
+	HeapData read = {0};
+	api_write_to_file(disk, path, file_contents);
+	ret = api_read_all_from_file(disk, 2, &read);
 
-	file_entry.inode_number = 0xAA;
-	dir_add_to_directory(disk, path, file_entry);
+	int cmp = memcmp(file_contents.data, read.data, file_contents.size);
+	mu_assert("[MinUnit][TEST] test rw 1: read data incorrect", cmp == 0);
 
-	*/
-	// TODO complete test
 	return 0;
 }
 
@@ -1734,38 +1729,38 @@ static char* test_bitmap_io() {
 
 
 static char* all_tests() {
-	//mu_run_test(test_write_data_to_disk_2);
-	//mu_run_test(test_superblock_serialization);
-	//mu_run_test(test_superblock_calculations);
-	//mu_run_test(test_bitmap_io);
-	//mu_run_test(test_directory_get_inode_number);
-	//mu_run_test(test_directory_add_entry);
-	//mu_run_test(test_find_continuous_bitmap_run);
-	//mu_run_test(test_next_dir_name);
-	//mu_run_test(test_find_next_bitmap_block);
-	//mu_run_test(test_alloc_blocks_continuous);
-	//mu_run_test(test_find_continuous_bitmap_run_2);
-	//mu_run_test(test_write_data_to_disk);
-	//mu_run_test(test_disk_io);
-	//mu_run_test(test_disk_io_2);
-	//mu_run_test(test_file_disk_addressssing);
-	//mu_run_test(test_div_round_up);
-	//mu_run_test(test_read_from_disk_by_seq);
-	//mu_run_test(test_file_disk_addressing_2);
-	//mu_run_test(test_file_disk_addressing_3);
-	//mu_run_test(test_file_disk_addressing_4);
-	//mu_run_test(test_file_disk_addressing_5);
-	//mu_run_test(test_lf_disk_addressing);
-	//mu_run_test(test_lf_disk_addressing_2);
-	//mu_run_test(test_lf_disk_addressing_3);
-	//mu_run_test(test_lf_disk_addressing_4);
-	//mu_run_test(test_read_from_disk);
-	//mu_run_test(test_directory_traversal);
-	//mu_run_test(test_inode_serialization);
-	//mu_run_test(test_write_inode);
-	//mu_run_test(test_metedata_load_and_store);
+	mu_run_test(test_write_data_to_disk_2);
+	mu_run_test(test_superblock_serialization);
+	mu_run_test(test_superblock_calculations);
+	mu_run_test(test_bitmap_io);
+	mu_run_test(test_directory_get_inode_number);
+	mu_run_test(test_directory_add_entry);
+	mu_run_test(test_find_continuous_bitmap_run);
+	mu_run_test(test_next_dir_name);
+	mu_run_test(test_find_next_bitmap_block);
+	mu_run_test(test_alloc_blocks_continuous);
+	mu_run_test(test_find_continuous_bitmap_run_2);
+	mu_run_test(test_write_data_to_disk);
+	mu_run_test(test_disk_io);
+	mu_run_test(test_disk_io_2);
+	mu_run_test(test_file_disk_addressssing);
+	mu_run_test(test_div_round_up);
+	mu_run_test(test_read_from_disk_by_seq);
+	mu_run_test(test_file_disk_addressing_2);
+	mu_run_test(test_file_disk_addressing_3);
+	mu_run_test(test_file_disk_addressing_4);
+	mu_run_test(test_file_disk_addressing_5);
+	mu_run_test(test_lf_disk_addressing);
+	mu_run_test(test_lf_disk_addressing_2);
+	mu_run_test(test_lf_disk_addressing_3);
+	mu_run_test(test_lf_disk_addressing_4);
+	mu_run_test(test_read_from_disk);
+	mu_run_test(test_directory_traversal);
+	mu_run_test(test_inode_serialization);
+	mu_run_test(test_write_inode);
+	mu_run_test(test_metedata_load_and_store);
 	mu_run_test(test_append_data_to_disk);
-	//mu_run_test(test_read_inode);
+	mu_run_test(test_read_inode);
 	mu_run_test(test_fill_unused_allocated_data);
 	mu_run_test(test_rw_1);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
