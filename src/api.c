@@ -167,3 +167,21 @@ int api_read_from_file(Disk disk, int inode_number, uint64_t start_read_byte, ui
 	llist_free(addresses);
 	return SUCCESS;
 }
+int api_create_dir(Disk* disk, HeapData path, HeapData directory_name) {
+	Inode inode = {0};
+	int inode_num = 0;
+	inode.flags &= INODE_FLAG_IS_DIR;
+	inode.magic = INODE_MAGIC;
+
+	int ret = fs_write_inode(*disk, &inode, &inode_num);
+	if(ret != SUCCESS) return ret;
+
+	DirectoryEntry entry = {0};
+	entry.inode_number = inode_num;
+	entry.name = directory_name;
+
+	ret = dir_add_to_directory(*disk, path, entry);
+	if(ret != SUCCESS) return ret;
+
+	return SUCCESS;
+}
