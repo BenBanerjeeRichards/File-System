@@ -173,8 +173,14 @@ int dir_add_to_directory(Disk disk, HeapData path, DirectoryEntry entry) {
 
 	// Find directory
 	DirectoryEntry parent_entry = {0};
-	ret = dir_get_directory(disk, path, root_data, &parent_entry);
-	if(ret != SUCCESS) return ret;
+
+	if(path.size == 0) {
+		// Write at root
+		parent_entry.inode_number = ROOT_DIRECTORY_INODE_NUMBER;
+	} else {
+		ret = dir_get_directory(disk, path, root_data, &parent_entry);
+		if(ret != SUCCESS) return ret;
+	}
 
 	Directory directory = {0};
 	ret = dir_add_entry(&directory, entry);
