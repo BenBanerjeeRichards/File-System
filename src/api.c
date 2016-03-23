@@ -78,6 +78,7 @@ int api_write_to_file(Disk disk, HeapData path, HeapData data) {
 	if(ret != SUCCESS) return ret;
 	
 	// TODO ensure that PBR works here
+	inode.size += data.size;
 	HeapData remaining = {0};
 	ret = fs_fill_unused_allocated_data(&disk, &inode, data, &remaining);
 	if(ret != SUCCESS) return ret;
@@ -101,6 +102,8 @@ int api_write_to_file(Disk disk, HeapData path, HeapData data) {
 	ret = fs_write_data_to_disk(&disk, remaining, *addresses, true);
 	if(ret != SUCCESS) return ret;
 
+	ret = fs_write_inode_data(disk, inode, inode.inode_number);
+	if(ret != SUCCESS) return ret;
 	mem_free(remaining);
 
 	return SUCCESS;
