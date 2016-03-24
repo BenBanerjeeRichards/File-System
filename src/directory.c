@@ -189,6 +189,10 @@ int dir_add_to_directory(Disk disk, HeapData path, DirectoryEntry entry) {
 	ret = fs_write_to_file(&disk, parent_entry.inode_number, directory);
 	if(ret != SUCCESS) return ret;
 
+
+	return SUCCESS;
+}
+
 DirectoryEntry dir_read_next_entry(Directory directory, int start, int* error) {
 	DirectoryEntry entry = {0};
 	int ret = 0;
@@ -224,5 +228,78 @@ DirectoryEntry dir_read_next_entry(Directory directory, int start, int* error) {
 	*error = SUCCESS;
 	return entry;
 }
+
+int dir_remove_entry(Disk* disk, HeapData path, HeapData name, Directory* new_directory) {
+	int ret = 0;
+
+	Inode inode = fs_get_inode_from_path(*disk, path, &ret);
+	if(ret != SUCCESS) return ret;
+	
+	Directory dir = {0};
+	ret = api_read_all_from_file(*disk, inode.inode_number, &dir);
+	if(ret != SUCCESS) return ret;
+
+	int current_dir_pos = 0;
+	bool found = false;
+	DirectoryEntry entry = {0};
+
+	while(current_dir_pos < dir.size) {
+		entry = dir_read_next_entry(dir, current_dir_pos, &ret);
+		if(ret != SUCCESS) return ret;
+
+		int cmp = memcmp(entry.name.data, name.data, name.size);
+		if(cmp == 0) {
+			found = true;
+			break;
+		}
+
+		current_dir_pos += entry.name.size + 5;
+	}
+
+	if(!found) DIR_ENTRY_DOES_NOT_EXIST;
+	const int entry_size = entry.name.size + 5;
+
+	const int higher_size = dir.size - entry_size - current_dir_pos;
+	const int lower_size = current_dir_pos;
+
+	HeapData higher = {0};
+	HeapData lower = {0};
+	HeapData new_dir = {0};
+
+	if(higher_size > 0) {
+		ret = mem_alloc(&higher, dir.size - entry_size - current_dir_pos);
+		if(ret != SUCCESS) return ret;
+		memcpy(higher.data, &dir.data[current_dir_pos + entry_size], higher.size);
+	}
+
+	if(lower_size > 0) {
+		ret = mem_alloc(&lower, current_dir_pos);
+		if(ret != SUCCESS) return ret;
+		memcpy(lower.data, dir.data, lower.size);
+	}
+
+	if(lower_size < 0 && higher_size < 0) {
+		*new_directory = new_dir;
+		return SUCCESS;
+	}
+
+	ret = mem_alloc(&new_dir, lower.size + higher.size);
+	if(ret != SUCCESS) return ret;
+
+	if(higher_size == 0) {
+		memcpy(new_dir.data, lower.data, lower.size);
+		mem_free(lower);
+	} else if(lower_size == 0) {
+		memcpy(&new_dir.data[lower.size], higher.data, higher.size);
+		mem_free(higher);
+	} else {
+		memcpy(new_dir.data, lower.data, lower.size);
+		memcpy(&new_dir.data[lower.size], higher.data, higher.size);
+
+		mem_free(lower);
+		mem_free(higher);
+	}
+
+	*new_directory = new_dir;
 	return SUCCESS;
 }
