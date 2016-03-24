@@ -194,9 +194,14 @@ static char* test_dir_remove_entry() {
 	util_string_to_heap("Test Directory/Test File 2.txt", &fs_2);
 	util_string_to_heap("Test Directory/Test File 3.txt", &fs_3);
 
-	DirectoryEntry fs_1_e = {0};
-	DirectoryEntry fs_2_e = {0};
-	DirectoryEntry fs_3_e = {0};
+	HeapData name_1 = {0};
+	HeapData name_2 = {0};
+	HeapData name_3 = {0};
+	util_string_to_heap("Test File 1.txt", &name_1);
+	util_string_to_heap("Test File 2.txt", &name_2);
+	util_string_to_heap("Test File 3.txt", &name_3);
+
+
 	Permissions perm = {0};
 
 	ret = api_create_dir(&disk, path, path);
@@ -206,6 +211,52 @@ static char* test_dir_remove_entry() {
 	ret = api_create_file(disk, perm, fs_2);
 	ret = api_create_file(disk, perm, fs_3);
 
+	LList* items;
+	api_list_directory(disk, test_dir_name, &items);
+
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect number of items (1)", items->num_elements == 3);
+	int cmp = memcmp(name_1.data, (*(FileDetails*)items->head->element).name.data, name_1.size);
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect item  (1:1)", cmp == 0);
+	cmp = memcmp(name_2.data, (*(FileDetails*)items->head->next->element).name.data, name_2.size);
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect item  (1:2)", cmp == 0);
+	cmp = memcmp(name_3.data, (*(FileDetails*)items->head->next->next->element).name.data, name_3.size);
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect item  (1:3)", cmp == 0);
+
+	llist_free(items);
+
+	ret = api_delete_file(&disk, fs_2);
+	api_list_directory(disk, test_dir_name, &items);
+
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect number of items (2)", items->num_elements == 2);
+	cmp = memcmp(name_1.data, (*(FileDetails*)items->head->element).name.data, name_1.size);
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect item  (2:1)", cmp == 0);
+	cmp = memcmp(name_3.data, (*(FileDetails*)items->head->next->element).name.data, name_3.size);
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect item  (2:1)", cmp == 0);
+
+	llist_free(items);
+
+	ret = api_delete_file(&disk, fs_1);
+	api_list_directory(disk, test_dir_name, &items);
+
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect number of items (1)", items->num_elements == 1);
+	cmp = memcmp(name_3.data, (*(FileDetails*)items->head->element).name.data, name_3.size);
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect item  (3:1)", cmp == 0);
+
+	llist_free(items);
+
+	ret = api_delete_file(&disk, fs_3);
+	api_list_directory(disk, test_dir_name, &items);
+	mu_assert("[MinUnit][TEST] api remove entry: list incorrect number of items (3)", items->num_elements == 0);
+	llist_free(items);
+
+
+	mem_free(test_dir_name);
+	mem_free(fs_1);
+	mem_free(fs_2);
+	mem_free(fs_3);
+	mem_free(name_1);
+	mem_free(name_2);
+	mem_free(name_3);
 	return 0;
 }
 

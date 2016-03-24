@@ -150,6 +150,11 @@ typedef struct {
 	uint32_t gid;
 } Permissions;
 
+typedef struct {
+	Inode inode;
+	HeapData name;
+} FileDetails;
+
 int fs_create_superblock(Superblock*, uint64_t);
 int fs_allocate_blocks(Disk*, int, LList**); 
 int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_block);

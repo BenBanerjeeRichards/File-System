@@ -218,3 +218,37 @@ int api_create_dir(Disk* disk, HeapData path, HeapData directory_name) {
 
 	return SUCCESS;
 }
+
+int api_list_directory(Disk disk, HeapData path, LList** items) {
+	int ret = 0;
+
+	Inode inode = fs_get_inode_from_path(disk, path, &ret);
+	if(ret != SUCCESS) return ret;
+
+	Directory dir = {0};
+	ret = api_read_all_from_file(disk, inode.inode_number, &dir);
+	if(ret != SUCCESS) return ret;
+
+	*items = llist_new();
+	(*items)->free_element = free_element_standard;
+
+	int current_pos = 0;
+	while(current_pos < dir.size) {
+		DirectoryEntry entry = dir_read_next_entry(dir, current_pos, &ret);
+		if(ret != SUCCESS) return ret;
+		current_pos += entry.name.size + 5;
+
+		Inode inode = fs_read_inode(disk, entry.inode_number, &ret);
+		if(ret != SUCCESS) return ret;
+
+		FileDetails* det = malloc(sizeof(FileDetails));
+		det->inode = inode;
+		det->name = entry.name;
+
+		ret = llist_insert(*items, det);
+		if(ret != SUCCESS) return ret;
+	}
+
+	return SUCCESS;
+
+}

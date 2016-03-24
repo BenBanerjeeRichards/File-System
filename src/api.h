@@ -17,5 +17,5 @@ int api_read_from_file(Disk disk, int inode_number, uint64_t start_read_byte, ui
 int api_read_all_from_file(Disk disk, int inode_number, HeapData* read_data);
 int api_delete_file(Disk* disk, HeapData path);
 int api_create_dir(Disk* disk, HeapData path, HeapData directory_name);
-
+int api_list_directory(Disk disk, HeapData path, LList** items);
 #endif
