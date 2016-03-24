@@ -189,5 +189,40 @@ int dir_add_to_directory(Disk disk, HeapData path, DirectoryEntry entry) {
 	ret = fs_write_to_file(&disk, parent_entry.inode_number, directory);
 	if(ret != SUCCESS) return ret;
 
+DirectoryEntry dir_read_next_entry(Directory directory, int start, int* error) {
+	DirectoryEntry entry = {0};
+	int ret = 0;
+
+	// Read inode number
+	entry.inode_number = util_read_uint32(directory, start, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return entry;
+	}
+
+	// Read name size
+	const int name_size = mem_read(directory, start + 4, &ret);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return entry;
+	}
+
+	// Read name
+	ret = mem_alloc(&entry.name, name_size);
+	if(ret != SUCCESS) {
+		*error = ret;
+		return entry;
+	}
+
+	if(entry.name.size + start + 5 > directory.size) {
+		*error = ERR_INVALID_MEMORY_ACCESS;
+		return entry;
+	}
+
+	memcpy(entry.name.data, &directory.data[start + 5], name_size);
+
+	*error = SUCCESS;
+	return entry;
+}
 	return SUCCESS;
 }

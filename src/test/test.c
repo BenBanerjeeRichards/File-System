@@ -111,6 +111,109 @@ Disk create_less_fragmented_disk() {
 	return disk;
 }
 
+static char* test_dir_read_entry() {
+	Directory directory = {0};
+	HeapData filename = {0};
+	HeapData filename2 = {0};
+	HeapData filename3 = {0};
+	DirectoryEntry entry = {0};
+	DirectoryEntry entry2 = {0};
+	DirectoryEntry entry3 = {0};
+
+	int ret = 0;
+
+	util_string_to_heap("Hello World.txt", &filename);
+	util_string_to_heap("main.c", &filename2);
+	util_string_to_heap("a nice file picture.jg", &filename3);
+
+	entry.name = filename;
+	entry.inode_number = 21098740;
+
+	entry2.inode_number = 0x83f7bc82;
+	entry2.name = filename2;
+
+	entry2.inode_number = 213987;
+	entry2.name = filename3;
+
+
+	dir_add_entry(&directory, entry);
+	dir_add_entry(&directory, entry2);
+	dir_add_entry(&directory, entry3);
+
+	int current = 0;
+	DirectoryEntry e1 = dir_read_next_entry(directory, current, &ret);
+	current += e1.name.size;
+	current += 5;
+	
+	mu_assert("[MinUnit][TEST] test dir read next entry: incorrect entry inode number (1)", e1.inode_number == entry.inode_number);
+	
+	int cmp = memcmp(entry.name.data, e1.name.data, entry.name.size);
+	mu_assert("[MinUnit][TEST] test dir read next entry: incorrect file name (1)", cmp == 0);
+
+	DirectoryEntry e2 = dir_read_next_entry(directory, current, &ret);
+	current += e2.name.size;
+	current += 5;
+
+	mu_assert("[MinUnit][TEST] test dir read next entry: incorrect entry inode number (2)", e2.inode_number == entry2.inode_number);
+	cmp = memcmp(entry2.name.data, e2.name.data, entry2.name.size);
+	mu_assert("[MinUnit][TEST] test dir read next entry: incorrect file name (2)", cmp == 0);
+
+
+	DirectoryEntry e3 = dir_read_next_entry(directory, current, &ret);
+	current += e3.name.size;
+	current += 5;
+	
+	mu_assert("[MinUnit][TEST] test dir read next entry: incorrect entry inode number (3)", e3.inode_number == entry3.inode_number);
+	cmp = memcmp(entry3.name.data, e3.name.data, entry3.name.size);
+	mu_assert("[MinUnit][TEST] test dir read next entry: incorrect file name (3)", cmp == 0);
+
+	
+	mem_free(directory);
+	mem_free(entry.name);
+	mem_free(entry2.name);
+
+
+	return 0;
+}
+
+static char* test_dir_remove_entry() {
+	// Create 'Test Directorty/file1.txt, file2.txt'
+	int ret = 0;
+	Disk disk = fs_create_filesystem("testrd.bin", MEGA, &ret);
+
+	HeapData path = {0};
+	util_string_to_heap("", &path);
+
+	HeapData test_dir_name = {0};
+	util_string_to_heap("Test Directory", &test_dir_name);
+	
+	HeapData fs_1 = {0};
+	HeapData fs_2 = {0};
+	HeapData fs_3 = {0};
+	util_string_to_heap("Test Directory/Test File 1.txt", &fs_1);
+	util_string_to_heap("Test Directory/Test File 2.txt", &fs_2);
+	util_string_to_heap("Test Directory/Test File 3.txt", &fs_3);
+
+	DirectoryEntry fs_1_e = {0};
+	DirectoryEntry fs_2_e = {0};
+	DirectoryEntry fs_3_e = {0};
+	Permissions perm = {0};
+
+	ret = api_create_dir(&disk, path, path);
+	ret = api_create_dir(&disk, path, test_dir_name);
+
+	ret = api_create_file(disk, perm, fs_1);
+	ret = api_create_file(disk, perm, fs_2);
+	ret = api_create_file(disk, perm, fs_3);
+
+	return 0;
+}
+
+static char* test_api_create_dir() {
+
+	return 0;
+}
+
 static char* test_rw_1() {
 	int ret = 0;
 	Disk disk = fs_create_filesystem("testfs.bin", MEGA, &ret);
@@ -1729,7 +1832,7 @@ static char* test_bitmap_io() {
 
 
 static char* all_tests() {
-	mu_run_test(test_write_data_to_disk_2);
+	/*mu_run_test(test_write_data_to_disk_2);
 	mu_run_test(test_superblock_serialization);
 	mu_run_test(test_superblock_calculations);
 	mu_run_test(test_bitmap_io);
@@ -1753,16 +1856,19 @@ static char* all_tests() {
 	mu_run_test(test_lf_disk_addressing);
 	mu_run_test(test_lf_disk_addressing_2);
 	mu_run_test(test_lf_disk_addressing_3);
-	mu_run_test(test_lf_disk_addressing_4);
+	mu_run_test(test_lf_disk_addressing_4);	  
 	mu_run_test(test_read_from_disk);
-	mu_run_test(test_directory_traversal);
+	mu_run_test(test_directory_traversal);  
 	mu_run_test(test_inode_serialization);
 	mu_run_test(test_write_inode);
 	mu_run_test(test_metedata_load_and_store);
 	mu_run_test(test_append_data_to_disk);
 	mu_run_test(test_read_inode);
-	mu_run_test(test_fill_unused_allocated_data);
+	mu_run_test(test_fill_unused_allocated_data);*/
 	mu_run_test(test_rw_1);
+	mu_run_test(test_dir_remove_entry);
+	mu_run_test(test_api_create_dir);
+	mu_run_test(test_dir_read_entry);
 	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;
