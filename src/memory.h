@@ -9,6 +9,10 @@ typedef struct {
 	int valid;
 } HeapData;
 
+typedef struct {
+	HeapData* list;
+	int num_items;
+} HeapDataList;
 
 
 int mem_alloc(HeapData*, int);
