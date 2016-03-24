@@ -160,6 +160,7 @@ int fs_read_metadata(Disk disk);
 int fs_write_inode_data(Disk disk, Inode inode, int inode_num);
 int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, HeapData* remaining_data);
 int fs_write_to_file(Disk* disk, int inode_number, HeapData data);
+int fs_delete_file(Disk* disk, HeapData path);
 
 Disk fs_create_filesystem(const char* name, int size, int* error);
 HeapData fs_read_inode_data(Disk disk, int inode_num, int* error);

@@ -278,6 +278,23 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 	return SUCCESS;
 } 
 
+int fs_delete_file(Disk* disk, HeapData path) {
+	int ret = 0;
+	Inode inode = fs_get_inode_from_path(*disk, path, &ret);
+	if(ret != SUCCESS) return ret;
+
+	LList* addresses = stream_read_addresses(*disk, inode, &ret);
+	if(ret != SUCCESS) return ret;
+
+	ret = stream_clear_bitmap(disk, addresses);
+	if(ret != SUCCESS) return ret;
+
+	ret = bitmap_write(&disk->data_bitmap, inode.inode_number, 0);
+	if(ret != SUCCESS) return ret;
+
+	return SUCCESS;
+}
+
 Inode fs_read_inode(Disk disk, int inode_num, int* error) {
 	Inode inode = {0};
 	int ret = 0;
