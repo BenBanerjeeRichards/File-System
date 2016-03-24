@@ -121,6 +121,38 @@ int api_read_all_from_file(Disk disk, int inode_number, HeapData* read_data) {
 	return SUCCESS;
 }
 
+int api_delete_file(Disk* disk, HeapData path) {
+	int ret = 0;
+
+	ret = fs_delete_file(disk, path);
+	if(ret != SUCCESS) return ret;
+
+	HeapData name = {0};
+	ret = dir_get_path_name(path, &name);
+	const int path_size = path.size;
+	path.size -= (name.size + 1);
+
+	Directory new_dir = {0};
+	dir_remove_entry(disk, path, name, &new_dir);
+
+	ret = fs_delete_file(disk, path);
+	if(ret != SUCCESS) return ret;
+
+	Inode dir_inode = fs_get_inode_from_path(*disk, path, &ret);
+	if(ret != SUCCESS) return ret;
+
+	int inode_num = 0;
+	ret = fs_write_file(disk, &dir_inode, new_dir, &inode_num);
+	if(ret != SUCCESS) return ret;
+
+	path.size = path_size;
+
+
+	mem_free(name);
+
+	return SUCCESS;
+}
+
 // TODO complete this function
 int api_read_from_file(Disk disk, int inode_number, uint64_t start_read_byte, uint64_t read_length_bytes, HeapData* read_data) {
 	int ret = 0;
@@ -167,6 +199,7 @@ int api_read_from_file(Disk disk, int inode_number, uint64_t start_read_byte, ui
 	llist_free(addresses);
 	return SUCCESS;
 }
+
 int api_create_dir(Disk* disk, HeapData path, HeapData directory_name) {
 	Inode inode = {0};
 	int inode_num = 0;
