@@ -36,6 +36,40 @@ void cli_process_command(char** arguments, int argument_count) {
 
 }
 
+int cli_cmd_new(char** arguments, int argument_count) {
+	int ret = 0;
+	
+	Disk disk = fs_create_filesystem(FILESYSTEM_FILE_NAME, DISK_SIZE, &ret);
+	if(ret != SUCCESS) return ret;
+
+	ret = fs_write_metadata(disk);
+	if(ret != SUCCESS) return ret;
+
+	return SUCCESS;
+}
+
+Disk cli_get_disk(int* error) {
+	int ret = 0;
+	Disk disk = {0};
+	disk.file = fopen(FILESYSTEM_FILE_NAME, "r+");
+	disk.size = DISK_SIZE;
+
+	if(disk.file == NULL) {
+		printf("Error: No file system found (%s). Use <fs new> to create one.\n", FILESYSTEM_FILE_NAME);
+		*error =  ERR_DISK_NOT_MOUNTED;
+		return disk;
+	}
+
+	ret = fs_read_metadata(&disk);
+	if(ret != SUCCESS) {
+		printf("Error: Failed to read metadata from disk\n");
+		*error = ret;
+		return disk;
+	}
+
+	return disk;
+}
+
 int	cli_cmd_newfile(char** arguments, int argument_count) {
 	printf("newfile\n");
 
