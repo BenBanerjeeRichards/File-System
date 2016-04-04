@@ -388,21 +388,21 @@ int fs_write_metadata(Disk disk) {
 	return SUCCESS;
 }
 
-int fs_read_metadata(Disk disk) {
+int fs_read_metadata(Disk* disk) {
 	int ret = 0;
 	
-	HeapData superblock = disk_read(disk, SUPERBLOCK_BLOCK_ADDR * BLOCK_SIZE, BLOCK_SIZE, &ret);
+	HeapData superblock = disk_read(*disk, SUPERBLOCK_BLOCK_ADDR * BLOCK_SIZE, BLOCK_SIZE, &ret);
 	if(ret != SUCCESS) return ret;
-	ret = unserialize_superblock(&superblock, &disk.superblock);
-	if(ret != SUCCESS) return ret;
-
-	if(disk.superblock.magic_1 != SUPERBLOCK_MAGIC_1) return ERR_INCORRECT_SUPERBLOCK_MAGIC;
-	if(disk.superblock.magic_2 != SUPERBLOCK_MAGIC_2) return ERR_INCORRECT_SUPERBLOCK_MAGIC;
-
-	disk.inode_bitmap = disk_read(disk, INODE_BITMAP_BLOCK_ADDR, disk.superblock.inode_bitmap_size, &ret);
+	ret = unserialize_superblock(&superblock, &disk->superblock);
 	if(ret != SUCCESS) return ret;
 
-	disk.data_bitmap = disk_read(disk, disk.superblock.data_blocks_start_addr * BLOCK_SIZE, disk.superblock.data_block_bitmap_size, &ret);
+	if(disk->superblock.magic_1 != SUPERBLOCK_MAGIC_1) return ERR_INCORRECT_SUPERBLOCK_MAGIC;
+	if(disk->superblock.magic_2 != SUPERBLOCK_MAGIC_2) return ERR_INCORRECT_SUPERBLOCK_MAGIC;
+
+	disk->inode_bitmap = disk_read(*disk, INODE_BITMAP_BLOCK_ADDR, disk->superblock.inode_bitmap_size, &ret);
+	if(ret != SUCCESS) return ret;
+
+	disk->data_bitmap = disk_read(*disk, disk->superblock.data_blocks_start_addr * BLOCK_SIZE, disk->superblock.data_block_bitmap_size, &ret);
 	if(ret != SUCCESS) return ret;
 
 	return SUCCESS;

@@ -161,7 +161,7 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_
 int fs_write_inode(Disk disk, Inode* inode, int* inode_number);
 int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number);
 int fs_write_metadata(Disk disk);
-int fs_read_metadata(Disk disk);
+int fs_read_metadata(Disk* disk);
 int fs_write_inode_data(Disk disk, Inode inode, int inode_num);
 int fs_fill_unused_allocated_data(Disk* disk, Inode* inode, HeapData new_data, HeapData* remaining_data);
 int fs_write_to_file(Disk* disk, int inode_number, HeapData data);

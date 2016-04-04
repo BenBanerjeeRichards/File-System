@@ -556,7 +556,7 @@ static char* test_metedata_load_and_store() {
 	memcpy(disk_1.inode_bitmap.data, disk.inode_bitmap.data, disk.inode_bitmap.size);
 
 	fs_write_metadata(disk);
-	fs_read_metadata(disk);
+	fs_read_metadata(&disk);
 
 	int cmp = compare_superblock(disk_1.superblock, disk.superblock);
 	mu_assert("[MinUnit][TEST] metadata io: failed superblock comparison", cmp == 0);
