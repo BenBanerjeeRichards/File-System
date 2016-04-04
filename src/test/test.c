@@ -64,11 +64,11 @@ Disk create_fragmented_disk() {
 
 			// Uncomment to re-create disk AS WELL AS [A]
 			
-	/*		ret = disk_write(&disk, BLOCK_SIZE * (disk.superblock.data_blocks_start_addr + i), full_block);
+			/* ret = disk_write(&disk, BLOCK_SIZE * (disk.superblock.data_blocks_start_addr + i), full_block);
 			if (ret != SUCCESS) { 
 				printf("Failed to write to disk at %i error code %i\n", i, ret);
 				return disk;
-			}  */
+			}   */
 		}
 	}
 
@@ -87,7 +87,7 @@ Disk create_less_fragmented_disk() {
 	disk.size = size;
 
 	fs_create_superblock(&disk.superblock, size);
-	//disk_mount(&disk, "less_fragmented.bin");
+	disk_mount(&disk, "less_fragmented.bin");
 
 	mem_alloc(&disk.data_bitmap, disk.superblock.data_block_bitmap_size_bytes + 1);
 
@@ -1883,7 +1883,7 @@ static char* test_bitmap_io() {
 
 
 static char* all_tests() {
-	/*mu_run_test(test_write_data_to_disk_2);
+	mu_run_test(test_write_data_to_disk_2);
 	mu_run_test(test_superblock_serialization);
 	mu_run_test(test_superblock_calculations);
 	mu_run_test(test_bitmap_io);
@@ -1915,12 +1915,11 @@ static char* all_tests() {
 	mu_run_test(test_metedata_load_and_store);
 	mu_run_test(test_append_data_to_disk);
 	mu_run_test(test_read_inode);
-	mu_run_test(test_fill_unused_allocated_data);*/
+	mu_run_test(test_fill_unused_allocated_data);
 	mu_run_test(test_rw_1);
 	mu_run_test(test_dir_remove_entry);
 	mu_run_test(test_api_create_dir);
 	mu_run_test(test_dir_read_entry);
-	//mu_run_test(test_alloc_blocks_non_continuous); TODO write better test
 
 	return 0;
 }
