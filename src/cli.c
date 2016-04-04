@@ -1,4 +1,6 @@
 #include "cli.h"
+#include "test/test.h"
+
 void show_usage() {
 	const char* usage = "USAGE: fs <command> <arguments>\n"
 		"fs: A file system in a file (tm)\n\n"
@@ -24,6 +26,9 @@ void cli_process_command(char** arguments, int argument_count) {
 		cli_cmd_ls(arguments, argument_count);
 	} else if(strcmp("tofs", arguments[1]) == 0) {
 		cli_cmd_tofs(arguments, argument_count);
+	} else if (strcmp("test", arguments[1]) == 0) {
+		test_run_all();
+		return;
 	} else {
 		show_usage();
 		return;
