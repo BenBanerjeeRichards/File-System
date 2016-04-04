@@ -7,9 +7,12 @@
 #include "serialize.h"
 #include "util.h"
 #include "test/test.h"
+#include "cli.h"
 
 int main(int argc, char** args){
-	test_run_all();
+	cli_process_command(args, argc);
+	
+	//test_run_all();
 
 	return 0;
 } 
