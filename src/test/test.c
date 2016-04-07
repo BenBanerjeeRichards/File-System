@@ -176,7 +176,18 @@ static char* test_dir_read_entry() {
 	return 0;
 }
 
-static char* test_dir_remove_entry() {
+/* This is an example of a bad unit test as it tests multiple units of functionality 
+in a single test. May refactor later on, leaving it in here for exemplification for 
+my assignment work.
+
+It tests:	
+	- api_list_directory
+	- api_delete_file
+	- api_create_dir
+*/
+
+// TODO refactor this test
+static char* test_api_directory_handling() {
 	// Create 'Test Directorty/file1.txt, file2.txt'
 	int ret = 0;
 	Disk disk = fs_create_filesystem("testrd.bin", MEGA, &ret);
@@ -261,7 +272,7 @@ static char* test_dir_remove_entry() {
 }
 
 static char* test_api_create_dir() {
-
+	// TODO
 	return 0;
 }
 
@@ -1883,22 +1894,30 @@ static char* test_bitmap_io() {
 
 
 static char* all_tests() {
-	mu_run_test(test_write_data_to_disk_2);
-	mu_run_test(test_superblock_serialization);
 	mu_run_test(test_superblock_calculations);
+	mu_run_test(test_superblock_serialization);
+	mu_run_test(test_inode_serialization);
+
 	mu_run_test(test_bitmap_io);
+	mu_run_test(test_find_continuous_bitmap_run);
+	mu_run_test(test_find_continuous_bitmap_run_2);
+	
 	mu_run_test(test_directory_get_inode_number);
 	mu_run_test(test_directory_add_entry);
-	mu_run_test(test_find_continuous_bitmap_run);
 	mu_run_test(test_next_dir_name);
+	mu_run_test(test_directory_traversal);  
 	mu_run_test(test_find_next_bitmap_block);
+	mu_run_test(test_api_create_dir);
+	mu_run_test(test_dir_read_entry);
+	mu_run_test(test_api_directory_handling);
+
 	mu_run_test(test_alloc_blocks_continuous);
-	mu_run_test(test_find_continuous_bitmap_run_2);
 	mu_run_test(test_write_data_to_disk);
+	mu_run_test(test_write_data_to_disk_2);
 	mu_run_test(test_disk_io);
 	mu_run_test(test_disk_io_2);
+
 	mu_run_test(test_file_disk_addressssing);
-	mu_run_test(test_div_round_up);
 	mu_run_test(test_read_from_disk_by_seq);
 	mu_run_test(test_file_disk_addressing_2);
 	mu_run_test(test_file_disk_addressing_3);
@@ -1908,18 +1927,16 @@ static char* all_tests() {
 	mu_run_test(test_lf_disk_addressing_2);
 	mu_run_test(test_lf_disk_addressing_3);
 	mu_run_test(test_lf_disk_addressing_4);	  
+
 	mu_run_test(test_read_from_disk);
-	mu_run_test(test_directory_traversal);  
-	mu_run_test(test_inode_serialization);
 	mu_run_test(test_write_inode);
+	mu_run_test(test_read_inode);
 	mu_run_test(test_metedata_load_and_store);
 	mu_run_test(test_append_data_to_disk);
-	mu_run_test(test_read_inode);
 	mu_run_test(test_fill_unused_allocated_data);
 	mu_run_test(test_rw_1);
-	mu_run_test(test_dir_remove_entry);
-	mu_run_test(test_api_create_dir);
-	mu_run_test(test_dir_read_entry);
+
+	mu_run_test(test_div_round_up);
 
 	return 0;
 }
