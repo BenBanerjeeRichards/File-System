@@ -8,24 +8,29 @@ void show_usage() {
 		"fs delfile <path> \t\t Delete the file at <path>\n"
 		"fs ls <path> \t\t\t List all of the files at the directory <path>\n"
 		"fs tofs <syspath> <path> \t Move a file on the computer's filesystem <syspath> to this file system at location <path>";
+		"fs new \t\t Create a new filesystem";
 
 	printf("%s\n",usage);
 }
 
 void cli_process_command(char** arguments, int argument_count) {
-	if(argument_count < 3) {
+	if(argument_count < 2) {
 		show_usage();
 		return;
 	}
 
-	if(strcmp("newfile", arguments[1]) ==  0) {
+	if(strcmp("newfile", arguments[1]) == 0) {
 		cli_cmd_newfile(arguments, argument_count);
+	} else if (strcmp("new", arguments[1]) == 0) {
+		cli_cmd_new(arguments, argument_count);
 	} else if(strcmp("delfile", arguments[1]) == 0) {
 		cli_cmd_delfile(arguments, argument_count);
 	} else if(strcmp("ls", arguments[1]) == 0) {
 		cli_cmd_ls(arguments, argument_count);
 	} else if(strcmp("tofs", arguments[1]) == 0) {
 		cli_cmd_tofs(arguments, argument_count);
+	}  else if(strcmp("newdir", arguments[1]) == 0) {
+		cli_cmd_newdir(arguments, argument_count);
 	} else if (strcmp("test", arguments[1]) == 0) {
 		test_run_all();
 		return;
@@ -71,7 +76,27 @@ Disk cli_get_disk(int* error) {
 }
 
 int	cli_cmd_newfile(char** arguments, int argument_count) {
-	printf("newfile\n");
+	if(argument_count != 3) {
+		show_usage();
+		return -1;
+	}
+	
+	int ret = 0;
+	Disk disk = cli_get_disk(&ret);
+	if(ret != SUCCESS) return ret;
+
+	HeapData path = {0};
+	Permissions perm = {0};
+	util_string_to_heap(arguments[2], &path);
+
+	ret = api_create_file(disk, perm, path);
+	if(ret != SUCCESS) {
+		printf("Error: Failed to create file, error code %i\n", ret);
+		return ret;
+	}
+
+	fs_write_metadata(disk);
+
 
 	return SUCCESS;
 }
@@ -91,5 +116,38 @@ int	cli_cmd_ls(char** arguments, int argument_count) {
 int	cli_cmd_tofs(char** arguments, int argument_count) {
 	printf("tofs\n");
 
+	return SUCCESS;
+}
+
+int	cli_cmd_newdir(char** arguments, int argument_count) {
+	if(argument_count != 3 && argument_count != 4) {
+		show_usage();
+		return -1;
+	}
+
+	int ret = 0;
+	Disk disk = cli_get_disk(&ret);
+	if(ret != SUCCESS) return ret;
+
+	printf("%i\n", disk.superblock.data_blocks_start_addr);
+
+	HeapData path = {0};
+	HeapData name = {0};
+
+	if(argument_count == 3) {
+		util_string_to_heap("", &path);
+		util_string_to_heap(arguments[2], &name);
+	} else {
+		util_string_to_heap(arguments[2], &path);
+		util_string_to_heap(arguments[3], &name);
+	}
+
+	ret = api_create_dir(&disk, path, name);
+	if(ret != SUCCESS) {
+		printf("Error: Failed to create dir, error code %i\n", ret);
+		return ret;
+	}
+
+	fs_write_metadata(disk);
 	return SUCCESS;
 }
