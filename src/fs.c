@@ -53,7 +53,7 @@ int fs_create_superblock(Superblock* superblock, uint64_t partition_size){
 int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 	// Grows as spaces are found
 	int allocated_bytes = 0;
-	// Where to start searching from, updated and wrapped around disk
+       	// Where to start searching from, updated and wrapped around disk
 	int current_byte = disk->superblock.data_bitmap_circular_loc;
 
 	while (allocated_bytes < num_blocks * BLOCK_SIZE) {
