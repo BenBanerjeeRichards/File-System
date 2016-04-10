@@ -21,3 +21,4 @@ test/*
 *.vcxproj.user
 *.txt
 build.py
+main.pdb
