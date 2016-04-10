@@ -10,7 +10,7 @@ void show_usage() {
 		"fs newfile <path> \t\t Create a new file at <path>\n"
 		"fs delfile <path> \t\t Delete the file at <path>\n"
 		"fs ls <path> \t\t\t List all of the files at the directory <path>\n"
-		"fs tofs <syspath> <path> \t Move a file on the computer's filesystem <syspath> to this file system at location <path>";
+		"fs tofs <syspath> <path> \t Move a file on the computer's filesystem <syspath> to this file system at location <path>"
 		"fs new \t\t Create a new filesystem";
 
 	printf("%s\n",usage);
