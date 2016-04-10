@@ -132,6 +132,8 @@ int api_delete_file(Disk* disk, HeapData path) {
 
 	HeapData name = {0};
 	ret = dir_get_path_name(path, &name);
+	if(ret != SUCCESS) return ret;
+
 	path.size -= (name.size + 1);
 
 	Directory new_dir = {0};
