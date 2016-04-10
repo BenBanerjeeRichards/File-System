@@ -141,8 +141,6 @@ int dir_get_directory(Disk disk, HeapData path, Directory start, DirectoryEntry*
 		current = fs_read_from_disk(disk, *dir_addresses, true, &ret);
 		if(ret != SUCCESS) return ret;
 	}
-
-	return SUCCESS;
 }
 
 int dir_get_path_name(HeapData path, HeapData* name) {
