@@ -132,7 +132,6 @@ int api_delete_file(Disk* disk, HeapData path) {
 
 	HeapData name = {0};
 	ret = dir_get_path_name(path, &name);
-	const int path_size = path.size;
 	path.size -= (name.size + 1);
 
 	Directory new_dir = {0};
@@ -148,7 +147,6 @@ int api_delete_file(Disk* disk, HeapData path) {
 	ret = fs_write_file(disk, &dir_inode, new_dir, &inode_num);
 	if(ret != SUCCESS) return ret;
 
-	path.size = path_size;
 
 
 	mem_free(name);
