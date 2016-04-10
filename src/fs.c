@@ -63,10 +63,11 @@ int _fs_allocate_fragmented(Disk* disk, int num_blocks, LList** addresses) {
 		// Look for size of 1 then find total size
 		int r = bitmap_find_continuous_block_run(disk->data_bitmap, 1, current_byte,
 			&run_start_bit);
-
 		if (r != SUCCESS) return r;
 
 		r = bitmap_find_continuous_run_length(disk->data_bitmap, run_start_bit, &length);
+		if(r != SUCCESS) return r;
+
 		current_byte = run_start_bit / 8 + length / 8;
 		allocated_bytes += length * BLOCK_SIZE;
 
@@ -270,6 +271,7 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 
 	int inode_num = 0;
 	ret = fs_write_inode(*disk, inode, &inode_num);
+	if(ret != SUCCESS) return ret;
 
 	*inode_number = inode_num;
 	inode->size = data.size;
