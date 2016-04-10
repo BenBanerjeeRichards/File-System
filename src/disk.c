@@ -96,7 +96,7 @@ int disk_write_offset(Disk* disk, int location, int offset, HeapData data) {
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
 	if (data.size <= 0) return ERR_INVALID_MEMORY_ACCESS;
 
-	int ret = 0;
+	int ret;
 	int start_write_loc = offset + location;
 	
 	if (start_write_loc + data.size > disk->size) {
@@ -197,7 +197,7 @@ int disk_remove(const char* name) {
 }
 
 int disk_free(Disk disk) {
-	int ret = 0;
+	int ret;
 	
 	ret = mem_free(disk.data_bitmap);
 	if(ret != SUCCESS) return ret;

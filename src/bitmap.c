@@ -34,7 +34,7 @@ int bitmap_read(Bitmap bitmap, int bit_address, int* error)
 }
 
 int bitmap_write_range(Bitmap bitmap, int bit_address_start, int length, int value) {
-	int ret = 0;
+	int ret;
 
 	for (int i = 0; i < length; i++) {
 		ret = bitmap_write(&bitmap, bit_address_start + i, value);
@@ -50,7 +50,7 @@ int bitmap_find_continuous_block_run(Bitmap bitmap, int length, int start_byte, 
 	
 	for (int i = 0; i < bitmap.size; i++)
 	{
-		int byte_index = 0;
+		int byte_index;
 		if(i + start_byte + 1 > bitmap.size) {
 			byte_index = (i + start_byte) - bitmap.size;
 		} else {
@@ -85,7 +85,7 @@ int bitmap_find_block(Bitmap bitmap, int start_byte, int* block_addr) {
 	int error = 0;
 
 	for (int i = 0; i < bitmap.size; i++){
-		int byte_index = 0;
+		int byte_index;
 		if(i + start_byte + 1 > bitmap.size) {
 			byte_index = (i + start_byte) - bitmap.size;
 		} else {

@@ -54,7 +54,7 @@ Disk create_fragmented_disk() {
 	mem_alloc(&full_block, BLOCK_SIZE);
 	memset(full_block.data, 0xFF, full_block.size);
 
-	int ret = 0;
+	int ret;
 
 	for (int i = 0; i < disk.superblock.num_data_blocks; i++) {
 		if (i % 2 == 0) {
@@ -691,7 +691,7 @@ static char* test_write_inode() {
 static char* test_directory_traversal() {
 	const int size = MEGA;
 	const char* fname = "testtrav.bin";
-	int ret = 0;
+	int ret;
 
 	Disk disk = {0};
 	Superblock sb = {0};
@@ -1709,7 +1709,7 @@ static char* test_directory_add_entry() {
 
 	uint8_t expected2[] = {0x01, 0x41, 0xf0,0xf4, 0x0C, 0x48 ,0x65 ,0x6c ,0x6c ,0x6f ,0x20 ,0x57 ,0x6f ,0x72 ,0x6c ,0x64 ,0x21, 0x83, 0xf7,0xbc, 0x82, 0x06, 0x6d ,0x61 ,0x69 ,0x6e ,0x2e ,0x63};
 
-	int ret = 0;
+	int ret;
 
 	ret = util_string_to_heap("Hello World!", &filename);
 	ret = util_string_to_heap("main.c", &filename2);

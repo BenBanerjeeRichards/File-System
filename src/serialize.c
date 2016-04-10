@@ -169,7 +169,7 @@ int unserialize_superblock(HeapData* data, Superblock* superblock){
 
 
 int serialize_inode(HeapData* data, Inode inode) {
-	int error = 0;
+	int error;
 	int location_count = 0;
 	const int INCREMENT_32 = 4;
 	const int INCREMENT_64 = 8;

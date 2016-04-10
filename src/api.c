@@ -127,7 +127,7 @@ int api_read_all_from_file(Disk disk, int inode_number, HeapData* read_data) {
 }
 
 int api_delete_file(Disk* disk, HeapData path) {
-	int ret = 0;
+	int ret;
 
 	ret = fs_delete_file(disk, path);
 	if(ret != SUCCESS) return ret;

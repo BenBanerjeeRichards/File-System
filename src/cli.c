@@ -57,7 +57,7 @@ int cli_cmd_new(char** arguments, int argument_count) {
 }
 
 Disk cli_get_disk(int* error) {
-	int ret = 0;
+	int ret;
 	Disk disk = {0};
 	disk.file = fopen(FILESYSTEM_FILE_NAME, "r+");
 	disk.size = DISK_SIZE;

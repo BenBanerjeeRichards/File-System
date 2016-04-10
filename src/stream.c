@@ -374,7 +374,7 @@ int stream_append_to_addresses(Disk disk, Inode* inode, LList new_addresses) {
 
 int stream_clear_bitmap(Disk* disk, LList* addresses) {
 	LListNode* current = addresses->head;
-	int ret = 0;
+	int ret;
 
 	for(int i = 0; i < addresses->num_elements; i++) {
 		BlockSequence* seq = current->element;

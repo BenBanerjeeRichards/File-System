@@ -131,7 +131,7 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_
 	if (addresses.num_elements == 0) return ERR_TOO_FEW_ADDRESSES_PROVIDED;
 	if (!data.valid) return ERR_INVALID_MEMORY_ACCESS;
 
-	int ret = 0;
+	int ret;
 	int blocks_written = 0;
 	LListNode* current = addresses.head;
 	for (int i = 0; i < addresses.num_elements; i++) {
@@ -141,7 +141,7 @@ int fs_write_data_to_disk(Disk* disk, HeapData data, LList addresses, bool data_
 		ret = mem_alloc(&section, seq->length * BLOCK_SIZE);
 		if (ret != SUCCESS) return ret;
 
-		int bytes_from_data = 0;
+		int bytes_from_data;
 		if(data.size < (BLOCK_SIZE * seq->length + BLOCK_SIZE * blocks_written)) {
 			bytes_from_data = data.size - BLOCK_SIZE * blocks_written;
 		} else {
@@ -195,7 +195,7 @@ HeapData fs_read_from_disk(Disk disk, LList addresses, bool data_block, int* err
 		BlockSequence* seq = current->element;
 		HeapData read = fs_read_from_disk_by_sequence(disk, *seq, data_block, error);
 		if(*error != SUCCESS) return data;
-		int read_mem_start = 0;
+		int read_mem_start;
 
 		// Add read data to data
 		if(!data.valid) {
@@ -217,7 +217,7 @@ int fs_write_inode(Disk disk, Inode *inode, int* inode_number) {
 	// Find free inode on disk
 	const int start = 0;	// TODO set this correctly
 	int block_addr = 0;
-	int ret = 0;
+	int ret;
 
 	ret = bitmap_find_block(disk.inode_bitmap, start, &block_addr);
 	if(ret != SUCCESS) return ret;
@@ -258,7 +258,7 @@ int fs_write_file(Disk* disk, Inode* inode, HeapData data, int* inode_number) {
 		4) Write the inode to the disk
 	*/
 
-	int ret = 0;
+	int ret;
 	
 	LList* addresses;
 	ret = fs_allocate_blocks(disk, div_round_up(data.size, BLOCK_SIZE), &addresses);
@@ -318,7 +318,7 @@ Inode fs_read_inode(Disk disk, int inode_num, int* error) {
 
 HeapData fs_read_inode_data(Disk disk, int inode_num, int* error) {
 	int ret = 0;
-	HeapData inode_data = {0};
+	HeapData inode_data;
 
 	double block_addr = inode_addr_to_disk_block_addr(disk, inode_num);
 	inode_data = disk_read(disk, block_addr * BLOCK_SIZE, INODE_SIZE, &ret);

@@ -9,7 +9,7 @@
 int dir_add_entry(Directory* directory, DirectoryEntry entry) {
 	if (entry.name.size > 0xFF) return ERR_INODE_NAME_TOO_LARGE;
 	const int entry_size = entry.name.size + 5;
-	int ret = 0;
+	int ret;
 
 	if (!directory->valid) {
 		ret = mem_alloc(directory, entry_size);
