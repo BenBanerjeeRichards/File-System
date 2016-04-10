@@ -20,7 +20,6 @@ int dir_add_entry(Directory* directory, DirectoryEntry entry) {
 	if (ret != SUCCESS) return ret;
 
 	const int INCREMENT_8 = 1;
-	const int INCREMENT_16 = 2;
 	const int INCREMENT_32 = 4;
 
 	int current_location = directory->size - entry_size;
@@ -102,7 +101,6 @@ int dir_find_next_path_name(HeapData path, int start, HeapData* name) {
 }
 
 int dir_get_directory(Disk disk, HeapData path, Directory start, DirectoryEntry* directory) {
-	bool found_entry = false;
 	int ret = 0;
 	Directory current = start;
 	DirectoryEntry previous_entry = {0};
