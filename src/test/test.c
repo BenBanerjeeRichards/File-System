@@ -160,8 +160,6 @@ static char* test_dir_read_entry() {
 
 
 	DirectoryEntry e3 = dir_read_next_entry(directory, current, &ret);
-	current += e3.name.size;
-	current += 5;
 	
 	mu_assert("[MinUnit][TEST] test dir read next entry: incorrect entry inode number (3)", e3.inode_number == entry3.inode_number);
 	cmp = memcmp(entry3.name.data, e3.name.data, entry3.name.size);
@@ -1509,7 +1507,6 @@ static char* test_alloc_blocks_non_continuous() {
 }
 
 static char* test_find_continuous_run_length() {
-	uint8_t bitmap_data[] = {0xFF, 0xFF, 0xFE, 0x0F, 0xFF, 0xFF, 0xFF};
 	int run_len = 1 + 4;
 	Bitmap bitmap = {0};
 	int start_bit = 23;
