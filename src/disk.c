@@ -3,10 +3,9 @@
 
 #include "disk.h"
 #include "constants.h"
-#include "bitmap.h"
 #include "memory.h"
+#include <stdint.h>
 
-#include <time.h>
 
 int disk_mount(Disk* disk, const char* name) {
 	// During testing the entire disk is re-written

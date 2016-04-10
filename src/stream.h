@@ -1,11 +1,7 @@
 #ifndef STREAM_H
 #define STREAM_H
 
-#include <stdint.h>
-#include "memory.h"
-#include "constants.h"
 #include "fs.h"
-#include "disk.h"
 
 int stream_write_addresses(Disk* disk, Inode* inode, LList addresses);
 int stream_clear_bitmap(Disk* disk, LList* addresses);

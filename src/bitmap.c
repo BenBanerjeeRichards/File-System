@@ -1,11 +1,7 @@
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include "memory.h"
-#include "fs.h"
 #include "bitmap.h"
-
+#include "constants.h"
 
 int bitmap_write(Bitmap* bitmap, int bit_address, int value){
 	// This works due to integer division

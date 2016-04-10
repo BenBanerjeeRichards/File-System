@@ -1,4 +1,9 @@
 #include "api.h"
+#include "disk.h"
+#include "directory.h"
+#include "stream.h"
+#include "util.h"
+#include "constants.h"
 
 int api_mount_filesystem(Disk* disk) {
 	int ret = 0;

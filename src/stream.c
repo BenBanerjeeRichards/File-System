@@ -1,7 +1,8 @@
 #include "stream.h"
 #include "util.h"
 #include <string.h>
-#include <math.h>
+#include "memory.h"
+#include "constants.h"
 
 int _stream_write_seq_to_heap(BlockSequence seq, HeapData* data, int location) {
 	int ret = util_write_uint32(data, location, seq.start_addr);

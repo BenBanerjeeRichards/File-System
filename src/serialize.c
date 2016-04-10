@@ -1,10 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "constants.h"
 #include "memory.h"
 #include "fs.h"
 #include "util.h"
+#include <stdint.h>
 
 int serialize_superblock(HeapData* data, Superblock superblock){
 	// Using constants to update location_count to help prevent mistakes

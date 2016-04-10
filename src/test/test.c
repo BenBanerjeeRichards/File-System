@@ -10,6 +10,8 @@
 #include "../stream.h"
 #include "../directory.h"
 #include "../api.h"
+#include "../constants.h"
+#include "../disk.h"
 #include "../../../core/src/llist.h"
 #include "test.h"
 

@@ -1,9 +1,7 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include <stdint.h>
 #include "memory.h"
-#include "fs.h"
 
 typedef HeapData Bitmap; 
 

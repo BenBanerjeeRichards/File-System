@@ -3,9 +3,6 @@
 
 
 #include "fs.h"
-#include "directory.h"
-#include "stream.h"
-
 
 int api_mount_filesystem(Disk* disk);
 int api_unmount_filesystem(Disk disk);

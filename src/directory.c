@@ -1,4 +1,10 @@
 #include "directory.h"
+#include "constants.h"
+#include "util.h"
+#include "disk.h"
+#include "serialize.h"
+#include "stream.h"
+#include "api.h"
 
 int dir_add_entry(Directory* directory, DirectoryEntry entry) {
 	if (entry.name.size > 0xFF) return ERR_INODE_NAME_TOO_LARGE;

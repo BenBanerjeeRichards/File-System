@@ -1,11 +1,8 @@
 #ifndef FS_DISK
 #define FS_DISK
 
-#include <stdint.h>
 #include "memory.h"
-#include "constants.h"
 #include "fs.h"
-#include "bitmap.h"
 
 int disk_mount(Disk* disk, const char* name);
 int disk_unmount(Disk);

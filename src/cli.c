@@ -1,5 +1,8 @@
 #include "cli.h"
+#include "util.h"
 #include "test/test.h"
+#include "api.h"
+#include "constants.h"
 
 void show_usage() {
 	const char* usage = "USAGE: fs <command> <arguments>\n"

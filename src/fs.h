@@ -5,7 +5,6 @@
 #include <stdbool.h>
 
 #include "memory.h"
-#include "constants.h"
 #include "bitmap.h"
 #include "../../core/src/llist.h"
 
