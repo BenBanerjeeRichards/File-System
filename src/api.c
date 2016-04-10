@@ -149,8 +149,6 @@ int api_delete_file(Disk* disk, HeapData path) {
 	ret = fs_write_file(disk, &dir_inode, new_dir, &inode_num);
 	if(ret != SUCCESS) return ret;
 
-
-
 	mem_free(name);
 
 	return SUCCESS;
@@ -194,11 +192,11 @@ int api_list_directory(Disk disk, HeapData path, LList** items) {
 		if(ret != SUCCESS) return ret;
 		current_pos += entry.name.size + 5;
 
-		Inode inode = fs_read_inode(disk, entry.inode_number, &ret);
+		Inode file_inode = fs_read_inode(disk, entry.inode_number, &ret);
 		if(ret != SUCCESS) return ret;
 
 		FileDetails* det = malloc(sizeof(FileDetails));
-		det->inode = inode;
+		det->inode = file_inode;
 		det->name = entry.name;
 
 		ret = llist_insert(*items, det);
