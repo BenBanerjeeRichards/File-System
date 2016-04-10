@@ -79,7 +79,6 @@ int serialize_superblock(HeapData* data, Superblock superblock){
 	if(ret != SUCCESS) return ret;
 
 	ret = util_write_uint32(data, location_count, superblock.data_bitmap_circular_loc);
-	location_count += INCREMENT_32;
 	if(ret != SUCCESS) return ret;
 	
 	return SUCCESS;
@@ -161,7 +160,6 @@ int unserialize_superblock(HeapData* data, Superblock* superblock){
 	if (error != SUCCESS) return error;
 
 	superblock->data_bitmap_circular_loc = util_read_uint32(*data, location_count, &error);
-	location_count += INCREMENT_32;
 	if (error != SUCCESS) return error;
 
 	return SUCCESS;
