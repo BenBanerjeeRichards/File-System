@@ -97,8 +97,6 @@ Disk create_less_fragmented_disk() {
 	mem_alloc(&full_block, BLOCK_SIZE);
 	memset(full_block.data, 0xFF, full_block.size);
 
-	int ret = 0;
-
 	int current_block = 0;
 	while(current_block < disk.superblock.num_data_blocks) {
 		bitmap_write(&disk.data_bitmap, current_block, 1);
@@ -775,7 +773,7 @@ static char* test_directory_traversal() {
 	util_string_to_heap("test dir A/test sub dir A/Test File B.txt", &path_2);
 
 	DirectoryEntry directory_1;
-	ret = dir_get_directory(disk, path_1, root, &directory_1);
+	dir_get_directory(disk, path_1, root, &directory_1);
 	mu_assert("[MinUnit][TEST] test directory traversal: incorrect inode number [1]", directory_1.inode_number == 2);
 	DirectoryEntry directory_2;
 	dir_get_directory(disk, path_2, root, &directory_2);
@@ -1384,7 +1382,7 @@ static char* test_alloc_blocks_continuous() {
 	disk.superblock = superblock;
 	disk.data_bitmap = block_bitmap;
 	LList* addresses;
-	int ret = fs_allocate_blocks(&disk, 128 * 8, &addresses);
+	fs_allocate_blocks(&disk, 128 * 8, &addresses);
 	
 	BlockSequence* node = addresses->head->element;
 	mu_assert("[MinUnit][TEST] alloc blocks continuous: incorrect alloc loaction (1)", node->start_addr == 256 * 8);
@@ -1397,7 +1395,7 @@ static char* test_alloc_blocks_non_continuous() {
 	Superblock superblock;
 	fs_create_superblock(&superblock, DISK_SIZE);
 	Bitmap block_bitmap = {0};
-	int ret = mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
+	mem_alloc(&block_bitmap, superblock.data_block_bitmap_size);
 	const int start_byte = 50300; // In filler after 10x1024
 
 	// Create filler blocks [blue]
@@ -1423,39 +1421,38 @@ static char* test_alloc_blocks_non_continuous() {
 
 	// Write fillers at correct locations in bitmap
 	int current_location = 0;
-	ret = 0;
 	for (int i = 0; i < 10; i++) {
-		ret += mem_write_section(&block_bitmap, current_location, filler_4000);
+		mem_write_section(&block_bitmap, current_location, filler_4000);
 		current_location += 4000 + 1024;
 	}
 
-	ret += mem_write_section(&block_bitmap, current_location, filler_5000);
+	mem_write_section(&block_bitmap, current_location, filler_5000);
 	current_location += 5000 + 512;
-	ret += mem_write_section(&block_bitmap, current_location, filler_5000);
+	mem_write_section(&block_bitmap, current_location, filler_5000);
 	current_location += 5000 + 256;
 	
 	for (int i = 0; i < 2; i++) {
-		ret += mem_write_section(&block_bitmap, current_location, filler_4000);
+		mem_write_section(&block_bitmap, current_location, filler_4000);
 		current_location += 4000 + 128;
 	}
 
 	for (int i = 0; i < 2; i++) {
-		ret += mem_write_section(&block_bitmap, current_location, filler_4000);
+		mem_write_section(&block_bitmap, current_location, filler_4000);
 		current_location += 4000 + 64;
 	}
 
 	for (int i = 0; i < 4; i++) {
-		ret += mem_write_section(&block_bitmap, current_location, filler_5000);
+		mem_write_section(&block_bitmap, current_location, filler_5000);
 		current_location += 5000 + 32;
 	}
 
-	ret += mem_write_section(&block_bitmap, current_location, filler_10000);
+	mem_write_section(&block_bitmap, current_location, filler_10000);
 	current_location += 10000 + 200;
-	ret += mem_write_section(&block_bitmap, current_location, filler_6000);
+	mem_write_section(&block_bitmap, current_location, filler_6000);
 	current_location += 6000 + 51;
-	ret += mem_write_section(&block_bitmap, current_location, filler_200);
+	mem_write_section(&block_bitmap, current_location, filler_200);
 	current_location += 200 + 5;
-	ret += mem_write_section(&block_bitmap, current_location, filler_200);
+	mem_write_section(&block_bitmap, current_location, filler_200);
 	current_location += 200;
 	
 	Disk disk = { 0 };
@@ -1465,7 +1462,7 @@ static char* test_alloc_blocks_non_continuous() {
 	LList* addresses;
 	disk.superblock.data_bitmap_circular_loc = start_byte;
 
-	ret = fs_allocate_blocks(&disk, 11776, &addresses);
+	fs_allocate_blocks(&disk, 11776, &addresses);
 
 	mu_assert("[MinUnit][TEST] alloc blocks non continuous: incorrect number of items in LL",
 		addresses->num_elements == 23);
@@ -1559,7 +1556,7 @@ static char* test_next_dir_name() {
 	util_string_to_heap(p, &path);
 
 	int location = 0;
-	int t = dir_find_next_path_name(path, location, &name);
+	dir_find_next_path_name(path, location, &name);
 	location += name.size + 1;	// Add one to get past forward slash	
 	int ret = memcmp(name.data, expected1, name.size);
 	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [1]", ret == 0);
@@ -1584,7 +1581,7 @@ static char* test_next_dir_name() {
 	mem_free(name);
 
 	dir_find_next_path_name(path, location, &name);
-	location += name.size + 1;	// Add one to get past forward slash	
+	name.size + 1;	// Add one to get past forward slash	
 	ret = memcmp(name.data, expected4, name.size);
 	mu_assert("[MinUnit][TEST] next dir name: dir name read is incorrect [4]", ret == 0);
 	mu_assert("[MinUnit][TEST] next dir name: read blank dir name [4]", name.size != 0);
@@ -1711,8 +1708,8 @@ static char* test_directory_add_entry() {
 
 	int ret;
 
-	ret = util_string_to_heap("Hello World!", &filename);
-	ret = util_string_to_heap("main.c", &filename2);
+	util_string_to_heap("Hello World!", &filename);
+	util_string_to_heap("main.c", &filename2);
 
 	entry.name = filename;
 	entry.inode_number = 21098740;
@@ -1725,8 +1722,8 @@ static char* test_directory_add_entry() {
 	mu_assert("[MinUnit][ERROR] directory add file: binary data produced incorrect [1]", ret == 0);
 
 
-	ret = dir_add_entry(&directory, entry2);
-	ret = memcmp(expected2, directory.data, sizeof(expected2));
+	dir_add_entry(&directory, entry2);
+	memcmp(expected2, directory.data, sizeof(expected2));
 
 	mu_assert("[MinUnit][ERROR] directory add file: binary data produced incorrect [2]", ret == 0);
 	
