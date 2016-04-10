@@ -668,8 +668,8 @@ static char* test_write_inode() {
 	Inode inode_read_3 = {0};
 
 	unserialize_inode(&inode_read_1_data, &inode_read_1);
-	unserialize_inode(&inode_read_1_data, &inode_read_2);
-	unserialize_inode(&inode_read_1_data, &inode_read_3);
+	unserialize_inode(&inode_read_2_data, &inode_read_2);
+	unserialize_inode(&inode_read_3_data, &inode_read_3);
 
 	int cmp = compare_inode(inode_1, inode_read_1);
 	mu_assert("[MinUnit][TEST] write inode: inode does not match unserialized inode [1]", cmp == 0);
