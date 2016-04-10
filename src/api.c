@@ -50,13 +50,11 @@ int api_create_file(Disk disk, Permissions permissons, HeapData path) {
 	entry.name = name;
 	entry.inode_number = inode_num;
 
-	const int path_size = path.size;
 	path.size -= (name.size + 1);
 
 	ret = dir_add_to_directory(disk, path, entry);
 	if(ret != SUCCESS) return ret;
 
-	path.size = path_size;
 	return SUCCESS;
 }
 
