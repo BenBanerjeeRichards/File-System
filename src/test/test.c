@@ -1893,58 +1893,166 @@ static char* test_bitmap_io() {
 
 
 static char* all_tests() {
+	printf("[....] test_superblock_calculations");
 	mu_run_test(test_superblock_calculations);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_superblock_serialization");
 	mu_run_test(test_superblock_serialization);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_inode_serialization");
 	mu_run_test(test_inode_serialization);
+	printf("\r\e[32m[PASS]\e[0m\n");
 
+	printf("[....] test_bitmap_io");
 	mu_run_test(test_bitmap_io);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_find_continuous_bitmap_run");
 	mu_run_test(test_find_continuous_bitmap_run);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_find_continuous_bitmap_run_2");
 	mu_run_test(test_find_continuous_bitmap_run_2);
+	printf("\r\e[32m[PASS]\e[0m\n");
 	
+	printf("[....] test_directory_get_inode_number");
 	mu_run_test(test_directory_get_inode_number);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_directory_add_entry");
 	mu_run_test(test_directory_add_entry);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_next_dir_name");
 	mu_run_test(test_next_dir_name);
-	mu_run_test(test_directory_traversal);  
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_directory_traversal");
+	mu_run_test(test_directory_traversal);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_find_next_bitmap_block");
 	mu_run_test(test_find_next_bitmap_block);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_api_create_dir");
 	mu_run_test(test_api_create_dir);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_dir_read_entry");
 	mu_run_test(test_dir_read_entry);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_api_directory_handling");
 	mu_run_test(test_api_directory_handling);
+	printf("\r\e[32m[PASS]\e[0m\n");
 
+	printf("[....] test_alloc_blocks_continuous");
 	mu_run_test(test_alloc_blocks_continuous);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_write_data_to_disk");
 	mu_run_test(test_write_data_to_disk);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_write_data_to_disk_2");
 	mu_run_test(test_write_data_to_disk_2);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_disk_io");
 	mu_run_test(test_disk_io);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_disk_io_2");
 	mu_run_test(test_disk_io_2);
+	printf("\r\e[32m[PASS]\e[0m\n");
 
+	printf("[....] test_file_disk_addressssing");
 	mu_run_test(test_file_disk_addressssing);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_read_from_disk_by_seq");
 	mu_run_test(test_read_from_disk_by_seq);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_file_disk_addressing_2");
 	mu_run_test(test_file_disk_addressing_2);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_file_disk_addressing_3");
 	mu_run_test(test_file_disk_addressing_3);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_file_disk_addressing_4");
 	mu_run_test(test_file_disk_addressing_4);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_file_disk_addressing_5");
 	mu_run_test(test_file_disk_addressing_5);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_lf_disk_addressing");
 	mu_run_test(test_lf_disk_addressing);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_lf_disk_addressing_2");
 	mu_run_test(test_lf_disk_addressing_2);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_lf_disk_addressing_3");
 	mu_run_test(test_lf_disk_addressing_3);
-	mu_run_test(test_lf_disk_addressing_4);	  
+	printf("\r\e[32m[PASS]\e[0m\n");
 
+	printf("[....] test_lf_disk_addressing_4");
+	mu_run_test(test_lf_disk_addressing_4);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_read_from_disk");
 	mu_run_test(test_read_from_disk);
-	mu_run_test(test_write_inode);
-	mu_run_test(test_read_inode);
-	mu_run_test(test_metedata_load_and_store);
-	mu_run_test(test_append_data_to_disk);
-	mu_run_test(test_fill_unused_allocated_data);
-	mu_run_test(test_rw_1);
+	printf("\r\e[32m[PASS]\e[0m\n");
 
+	printf("[....] test_write_inode");
+	mu_run_test(test_write_inode);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_read_inode");
+	mu_run_test(test_read_inode);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+		printf("[....] test_metedata_load_and_store");
+	mu_run_test(test_metedata_load_and_store);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_append_data_to_disk");
+	mu_run_test(test_append_data_to_disk);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_fill_unused_allocated_data");
+	mu_run_test(test_fill_unused_allocated_data);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_rw_1");
+	mu_run_test(test_rw_1);
+	printf("\r\e[32m[PASS]\e[0m\n");
+
+	printf("[....] test_div_round_up");
 	mu_run_test(test_div_round_up);
+	printf("\r\e[32m[PASS]\e[0m\n");
 
 	return 0;
 }
 
 void test_run_all(){
-	printf("----------------------------------\n");
 	printf("\033[1m[MinUnit] Running All Tests \033[0m\n");
+	printf("----------------------------------\n");
 
     char *result = all_tests();
+
+    printf("----------------------------------\n\n");
+   	printf("----------------------------------\n");
+
     if (result != 0) {
         printf("%s\n", result);
         printf("\033[1m[MinUnit] \e[31mFailed\e[0m \033[0m\n");
@@ -1952,6 +2060,7 @@ void test_run_all(){
     else {
         printf("\033[1m[MinUnit] \e[32mAll Tests Passed\e[0m \033[0m\n");
     }
+
     printf("\033[1m[MinUnit] Tests run: %d \033[0m\n", tests_run);
 	printf("----------------------------------\n");
 
