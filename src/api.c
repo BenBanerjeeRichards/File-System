@@ -158,53 +158,6 @@ int api_delete_file(Disk* disk, HeapData path) {
 	return SUCCESS;
 }
 
-// TODO complete this function
-int api_read_from_file(Disk disk, int inode_number, uint64_t start_read_byte, uint64_t read_length_bytes, HeapData* read_data) {
-	int ret = 0;
-
-	Inode inode = fs_read_inode(disk, inode_number, &ret);
-	if(ret != SUCCESS) return ret;
-	
-	LList* addresses = stream_read_addresses(disk, inode, &ret);
-	if(ret != SUCCESS) return ret;
-
-	LListNode* current = addresses->head;
-	LListNode* prev = NULL;
-
-	LList* read_addresses = llist_new();
-	read_addresses->free_element = &free_element_standard;
-
-	uint64_t previous_bytes = 0;
-	uint64_t bytes_read = 0;
-
-	bool start_reading = false;
-
-	for(int i = 0; i < addresses->num_elements; i++) {
-		BlockSequence* seq = current->element;
-
-		if(previous_bytes >= start_read_byte && bytes_read < read_length_bytes) {
-			llist_insert(read_addresses, seq);
-			bytes_read += seq->length * BLOCK_SIZE;
-		} else {
-			previous_bytes += seq->length * BLOCK_SIZE;
-		}
-
-		if(read_length_bytes > bytes_read) break;
-
-		// TODO update prev
-		current = current->next;
-	}
-
-	HeapData read = fs_read_from_disk(disk, *read_addresses, true, &ret);
-	HeapData read_final = {0};
-	mem_alloc(&read_final, read_length_bytes);
-
-
-	llist_free(read_addresses);
-	llist_free(addresses);
-	return SUCCESS;
-}
-
 int api_create_dir(Disk* disk, HeapData path, HeapData directory_name) {
 	Inode inode = {0};
 	int inode_num = 0;
