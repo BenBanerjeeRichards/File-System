@@ -231,6 +231,5 @@ double inode_addr_to_disk_block_addr(Disk disk, int inode_addr) {
 	const int inode_per_block = BLOCK_SIZE / INODE_SIZE;
 	const double table_addr = (double)inode_addr / (double)inode_per_block;
 	const double disk_addr = disk.superblock.inode_table_start_addr + table_addr;
-	const int disk_offset_bytes = disk_addr * BLOCK_SIZE;
 	return disk_addr;
 }
